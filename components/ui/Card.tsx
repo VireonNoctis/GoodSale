@@ -27,7 +27,7 @@ export default function Card({
 }: CardProps) {
   return (
     <div
-      className={`rounded-3xl ${variants[variant]} ${
+      className={`gs-card rounded-[1.5rem] ${variants[variant]} ${
         interactive ? 'card-hover press-scale cursor-pointer' : ''
       } ${className}`}
       {...rest}

@@ -95,7 +95,7 @@ export default function ProductRail({
     <section
       className={
         jade
-          ? 'relative overflow-hidden rounded-2xl bg-jade-950 p-3 text-white sm:p-4 dark:bg-jade-900'
+          ? 'relative overflow-hidden rounded-[1.5rem] bg-jade-950 p-4 text-white sm:p-5 dark:bg-ink-900'
           : ''
       }
       aria-label={label}
@@ -171,7 +171,7 @@ export default function ProductRail({
         tabIndex={0}
         role="region"
         aria-label={`${label} — scroll horizontally`}
-        className="-mx-1 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-1 pb-1 scrollbar-hide focus-ring"
+        className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide gs-scroll-fade focus-ring"
         style={{ scrollbarWidth: 'none' }}
       >
         {products.map((item, index) => (

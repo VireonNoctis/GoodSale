@@ -104,10 +104,10 @@ export async function rateLimitAsync(
 }
 
 export function clientIpFromRequest(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown';
-  const realIp = req.headers.get('x-real-ip');
-  if (realIp) return realIp;
+  const trustedPlatformIp=req.headers.get('x-vercel-forwarded-for')||req.headers.get('cf-connecting-ip')||req.headers.get('x-real-ip');
+  if(trustedPlatformIp?.trim())return trustedPlatformIp.split(',')[0].trim();
+  const forwarded=req.headers.get('x-forwarded-for');
+  if(forwarded){const chain=forwarded.split(',').map(value=>value.trim()).filter(Boolean);return chain[chain.length-1]||'unknown';}
   return 'unknown';
 }
 

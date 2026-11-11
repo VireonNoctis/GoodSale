@@ -1239,7 +1239,7 @@ export default function PremiumCheckout({
         </section>
 
         <aside className="space-y-3 lg:sticky lg:top-24">
-          <div className="rounded-[1.75rem] border border-ink-200 bg-white p-5 shadow-sm dark:border-ink-800 dark:bg-ink-900">
+          <div className="gs-receipt rounded-[1.5rem] border border-ink-200 bg-white p-5 shadow-[0_22px_52px_-42px_rgba(18,34,25,0.48)] dark:border-ink-800 dark:bg-ink-900">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-sm font-bold text-ink-900 dark:text-white">Order summary</h3>
               <span className="rounded-full bg-jade-500/10 px-2 py-0.5 text-[9px] font-bold text-jade-700 dark:text-jade-300">{sellerCount} shipment{sellerCount === 1 ? '' : 's'}</span>

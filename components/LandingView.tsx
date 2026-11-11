@@ -530,13 +530,13 @@ export default function LandingView({
           : 'All listings';
 
   return (
-    <div className="min-h-screen bg-white pb-20 transition-colors duration-300 dark:bg-ink-950">
+    <div className="min-h-screen bg-ink-50 pb-20 transition-colors duration-300 dark:bg-ink-950">
       {/* ───────────────────────── Promo band ───────────────────────── */}
       <section className="border-b border-ink-150 bg-ink-50/60 dark:border-ink-800 dark:bg-ink-950">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="grid gap-2.5 lg:grid-cols-[1.7fr_1fr]">
             {/* rotating banner */}
-            <div className="relative flex min-h-[172px] items-center overflow-hidden rounded-2xl bg-jade-950 px-4 py-5 text-white sm:px-6 sm:py-6">
+            <div className="relative flex min-h-[218px] items-center overflow-hidden rounded-[1.75rem] px-5 py-6 text-white shadow-[0_24px_56px_-36px_rgba(6,37,31,0.72)] gs-hero-panel sm:min-h-[250px] sm:px-7 sm:py-7">
               <div aria-hidden className="pointer-events-none absolute -left-10 -top-16 h-48 w-48 rounded-full bg-jade-500/25 blur-3xl" />
               <div aria-hidden className="pointer-events-none absolute -bottom-24 right-0 h-56 w-56 rounded-full bg-gold-400/10 blur-3xl" />
               <div className="relative z-10 max-w-md">
@@ -544,7 +544,7 @@ export default function LandingView({
                   <Flame className="h-3 w-3" aria-hidden="true" />
                   {slide.eyebrow}
                 </span>
-                <h1 className="mt-2 font-display text-2xl font-black leading-[1.08] tracking-tight sm:text-3xl">
+                <h1 className="mt-3 font-display text-3xl font-extrabold leading-[1.04] tracking-[-0.04em] sm:text-4xl lg:text-[2.8rem]">
                   {slide.title}
                   <br />
                   <span className="text-gold-300">{slide.highlight}</span>
@@ -556,7 +556,7 @@ export default function LandingView({
                   <button
                     type="button"
                     onClick={slide.action}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-jade-950 transition-colors hover:bg-jade-50 active:scale-95 dark:bg-gold-300 dark:hover:bg-gold-200"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2.5 text-[11px] font-bold text-jade-950 transition-colors hover:bg-jade-50 active:scale-95 gs-tactile dark:bg-gold-300 dark:hover:bg-gold-200"
                   >
                     {slide.cta}
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -593,7 +593,7 @@ export default function LandingView({
                       key={product.id}
                       type="button"
                       onClick={() => onSelectProduct(product.id)}
-                      className="relative h-28 w-24 overflow-hidden rounded-xl border border-white/15 bg-white/5 shadow-lg transition-transform hover:-translate-y-0.5 focus-ring lg:h-32 lg:w-28"
+                      className="relative h-32 w-28 overflow-hidden rounded-2xl shadow-xl sm:h-36 sm:w-32 border border-white/15 bg-white/5 shadow-lg transition-transform hover:-translate-y-0.5 focus-ring lg:h-32 lg:w-28"
                       aria-label={`View ${product.title}`}
                     >
                       <SmartImage
@@ -911,7 +911,7 @@ export default function LandingView({
         )}
 
         {/* ───────────────────── Seller band ───────────────────── */}
-        <section className="mt-6 overflow-hidden rounded-2xl bg-jade-950 text-white dark:bg-jade-900" aria-labelledby="sell-on-goodsale">
+        <section className="mt-7 overflow-hidden rounded-[1.75rem] text-white gs-seller-panel" aria-labelledby="sell-on-goodsale">
           <div className="grid gap-4 p-4 sm:p-6 lg:grid-cols-[1.3fr_1fr]">
             <div>
               <p className="inline-flex items-center gap-1.5 rounded-full bg-gold-300 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-ink-950">
@@ -986,7 +986,7 @@ export default function LandingView({
         </section>
 
         {/* ───────────────────── Trust strip ───────────────────── */}
-        <section className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-ink-150 bg-white p-3 shadow-sm sm:grid-cols-4 dark:border-ink-800 dark:bg-ink-900">
+        <section className="mt-5 grid grid-cols-2 gap-3 rounded-[1.5rem] border border-ink-200/80 bg-white/90 p-4 shadow-[0_16px_44px_-38px_rgba(20,32,25,0.45)] backdrop-blur sm:grid-cols-4 dark:border-ink-800 dark:bg-ink-900/90">
           {[
             { Icon: ShieldCheck, title: 'Secure payments', body: 'Escrow on every order' },
             { Icon: Truck, title: 'Tracked delivery', body: 'Nationwide riders' },
@@ -1120,7 +1120,7 @@ export default function LandingView({
             )
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4 xl:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-5">
                 {visibleProducts.map((product) => (
                   <ProductTile
                     key={product.id}
@@ -1177,7 +1177,7 @@ export default function LandingView({
                 Live auctions
               </h2>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-5">
               {auctions.map((product) => {
                 const auction = db.auctions.find((a) => a.productId === product.id);
                 const bids = db.bids.filter((b) => b.auctionId === auction?.id);

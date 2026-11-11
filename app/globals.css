@@ -1,10 +1,9 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
-   AURORA FOW design tokens — two colors only.
-   · jade  : the one GoodSale green (trust / escrow / go)
-   · ink   : the one neutral ramp (white → black, faint green cast)
-   Everything else is white or black. No other hues.
+   GoodSale design system — pine, champagne and warm stone.
+   Pine is reserved for actions and trust; champagne is a quiet accent.
+   Light and dark surfaces share the same neutral graphite foundation.
    ═══════════════════════════════════════════════════════════════ */
 @theme static {
   --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
@@ -12,53 +11,26 @@
   /* Numbers and labels render in the same clean sans — no terminal mono look. */
   --font-mono: var(--font-sans), system-ui, sans-serif;
 
-  /* ── jade: the single green hue (H≈150) ── */
-  --color-jade-50: #edfcf3;
-  --color-jade-100: #d2f7e2;
-  --color-jade-150: #bcf1d4;
-  --color-jade-200: #a0ebc5;
-  --color-jade-250: #82e3b4;
-  --color-jade-300: #5cd89f;
-  --color-jade-400: #1fb377;
-  --color-jade-500: #0a854b;
-  --color-jade-600: #0a7441;
-  --color-jade-700: #085c34;
-  --color-jade-800: #064728;
-  --color-jade-900: #053720;
-  --color-jade-950: #032214;
+  /* ── pine: marketplace accent for actions and trust ── */
+  --color-jade-50: #edf8f4; --color-jade-100: #d6eee5; --color-jade-150: #c2e4d8;
+  --color-jade-200: #a0d7c6; --color-jade-250: #79c4ad; --color-jade-300: #56ae95;
+  --color-jade-400: #26977b; --color-jade-500: #0d7a61; --color-jade-600: #0b654f;
+  --color-jade-700: #0a5241; --color-jade-800: #094236; --color-jade-900: #08342c;
+  --color-jade-950: #06251f;
 
-  /* ── gold: the one deliberate accent, reserved for ratings & trust ──
-     Used ONLY for review stars / trust ratings so a 5-star score reads
-     instantly. Never used for surfaces, buttons or chrome. */
-  --color-gold-50: #fffbeb;
-  --color-gold-100: #fdf3c7;
-  --color-gold-200: #fbe58a;
-  --color-gold-300: #f7d34d;
-  --color-gold-400: #eab308;
-  --color-gold-500: #d09b06;
-  --color-gold-600: #a97b05;
-  --color-gold-700: #805d04;
-  --color-gold-800: #5c4303;
-  --color-gold-900: #3d2d02;
+  /* ── champagne: ratings and considered editorial accents ── */
+  --color-gold-50: #fcfaf5; --color-gold-100: #f5efe2; --color-gold-200: #e9dcc0;
+  --color-gold-300: #d9c59b; --color-gold-400: #c4aa7a; --color-gold-500: #ad8f5c;
+  --color-gold-600: #8d7147; --color-gold-700: #705739; --color-gold-800: #55432e;
+  --color-gold-900: #3a3024;
 
-  /* ── ink: the single neutral ramp (white → black) ── */
-  --color-ink-50: #f6faf8;
-  --color-ink-100: #eef3f1;
-  --color-ink-150: #e6ece9;
-  --color-ink-200: #dde4e1;
-  --color-ink-250: #d2dad6;
-  --color-ink-300: #c2cbc7;
-  --color-ink-400: #717d78;
-  --color-ink-500: #6e7a74;
-  --color-ink-600: #57625d;
-  --color-ink-650: #4c5651;
-  --color-ink-700: #3d4642;
-  --color-ink-750: #353d3a;
-  --color-ink-800: #29302d;
-  --color-ink-850: #222826;
-  --color-ink-900: #1a201e;
-  --color-ink-905: #171c1a;
-  --color-ink-950: #0b0f0d;
+  /* ── warm stone / graphite: neutral surface ramp ── */
+  --color-ink-50: #faf9f6; --color-ink-100: #f4f2ec; --color-ink-150: #e9e6dd;
+  --color-ink-200: #dedad0; --color-ink-250: #ccc7bb; --color-ink-300: #b8b2a6;
+  --color-ink-400: #928b7f; --color-ink-500: #756f65; --color-ink-600: #5a574e;
+  --color-ink-650: #4b4b43; --color-ink-700: #3c3e37; --color-ink-750: #30342e;
+  --color-ink-800: #252b27; --color-ink-850: #1d2420; --color-ink-900: #171d1a;
+  --color-ink-905: #141a17; --color-ink-950: #0c110e;
 
   /* ── legacy aliases ──
      The public SEO pages were built on Tailwind's `emerald` scale before the
@@ -97,45 +69,23 @@
 @layer base {
   :root {
     color-scheme: light;
-    /* tonal surface containers — depth = color, not shadow */
-    --surface-0: #ffffff;
-    --surface-1: #f6faf8;
-    --surface-2: #eef3f1;
-    --surface-3: #e6ece9;
-    --edge: #dde4e1;
-    --edge-soft: #eef3f1;
-    --aurora-1: rgb(10 133 75 / 0.16);
-    --aurora-2: rgb(31 179 119 / 0.14);
-    --aurora-3: rgb(8 92 52 / 0.12);
+    --surface-0: #fffefa; --surface-1: #f8f7f2; --surface-2: #f0eee7; --surface-3: #e7e4dc;
+    --edge: #e1ded5; --edge-soft: #f0eee7;
+    --aurora-1: rgb(13 122 97 / 0.10); --aurora-2: rgb(196 170 122 / 0.10); --aurora-3: rgb(13 122 97 / 0.06);
   }
 
   .dark {
     color-scheme: dark;
-    /* One green in the dark theme: the neutral surface ramp is retoned onto the
-       same jade ladder as the header bar, so page, cards, inputs and chrome all
-       sit on the header's green instead of a second near-black green. */
-    --color-ink-950: #032214; /* page — identical to the header bar */
-    --color-ink-900: #053720; /* cards, sheets */
-    --color-ink-850: #05492a; /* nested panels */
-    --color-ink-800: #064728; /* borders, chips */
-    --color-ink-750: #07512e; /* hover lifts */
-    --color-ink-700: #085c34; /* active / pressed surfaces */
-    /* Secondary copy lifted a touch so muted text keeps its contrast on green. */
-    --color-ink-400: #93a49c;
-
-    --surface-0: #032214;
-    --surface-1: #053720;
-    --surface-2: #064728;
-    --surface-3: #07512e;
-    --edge: #064728;
-    --edge-soft: #053720;
-    --aurora-1: rgb(31 179 119 / 0.14);
-    --aurora-2: rgb(10 133 75 / 0.12);
-    --aurora-3: rgb(8 92 52 / 0.2);
+    --color-ink-950: #101613; --color-ink-900: #171f1b; --color-ink-850: #1f2924;
+    --color-ink-800: #29352f; --color-ink-750: #34433c; --color-ink-700: #43534a;
+    --color-ink-400: #a0aca5;
+    --surface-0: #101613; --surface-1: #171f1b; --surface-2: #1f2924; --surface-3: #29352f;
+    --edge: #2b3731; --edge-soft: #202a25;
+    --aurora-1: rgb(38 151 123 / 0.14); --aurora-2: rgb(196 170 122 / 0.09); --aurora-3: rgb(38 151 123 / 0.07);
   }
 
   body {
-    @apply bg-white text-ink-900 font-sans transition-colors duration-300;
+    @apply bg-ink-50 text-ink-900 font-sans transition-colors duration-300;
   }
 
   .dark body {
@@ -383,14 +333,14 @@
 @keyframes realtime-pop {
   0% {
     transform: scale(0.985);
-    box-shadow: 0 0 0 0 rgb(10 133 75 / 0.35);
+    box-shadow: 0 0 0 0 rgb(13 122 97 / 0.35);
   }
   55% {
     transform: scale(1.012);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 12px rgb(10 133 75 / 0);
+    box-shadow: 0 0 0 12px rgb(13 122 97 / 0);
   }
 }
 .animate-realtime-pop {
@@ -428,14 +378,14 @@
 .brand-loader-stage {
   background-color: var(--surface-1);
   background-image:
-    radial-gradient(42rem 30rem at 50% 18%, rgb(31 179 119 / 0.10), transparent 65%),
-    radial-gradient(34rem 26rem at 82% 96%, rgb(212 175 55 / 0.08), transparent 68%);
+    radial-gradient(42rem 30rem at 50% 18%, rgb(38 151 123 / 0.10), transparent 65%),
+    radial-gradient(34rem 26rem at 82% 96%, rgb(196 170 122 / 0.08), transparent 68%);
 }
 .dark .brand-loader-stage {
   background-color: var(--color-ink-950);
   background-image:
-    radial-gradient(42rem 30rem at 50% 18%, rgb(31 179 119 / 0.18), transparent 65%),
-    radial-gradient(34rem 26rem at 82% 96%, rgb(212 175 55 / 0.10), transparent 68%);
+    radial-gradient(42rem 30rem at 50% 18%, rgb(38 151 123 / 0.18), transparent 65%),
+    radial-gradient(34rem 26rem at 82% 96%, rgb(196 170 122 / 0.10), transparent 68%);
 }
 @keyframes brand-loader-pulse {
   0%, 100% { opacity: 0.55; transform: scale(1); }
@@ -487,10 +437,10 @@
 /* Glow pulse (badges, live indicators) — jade */
 @keyframes glow-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgb(10 133 75 / 0.35);
+    box-shadow: 0 0 0 0 rgb(13 122 97 / 0.35);
   }
   50% {
-    box-shadow: 0 0 0 8px rgb(10 133 75 / 0);
+    box-shadow: 0 0 0 8px rgb(13 122 97 / 0);
   }
 }
 .animate-glow-pulse {
@@ -702,26 +652,25 @@
    theme automatically. Gold stays a small trust accent (promo wordmark,
    ratings), never the primary action.
    ═══════════════════════════════════════════════════════════════ */
-/* The stage follows the saved theme: soft jade paper in light mode, deep
-   brand jade at night. The promo half is always the brand jade. */
+/* The stage follows the saved theme: warm paper in light mode, graphite at night. */
 .auth-stage {
   background-color: var(--surface-1);
   background-image:
-    radial-gradient(60rem 40rem at 12% -10%, rgb(10 133 75 / 0.08), transparent 60%),
-    radial-gradient(52rem 36rem at 92% 108%, rgb(212 175 55 / 0.10), transparent 62%);
+    radial-gradient(60rem 40rem at 12% -10%, rgb(13 122 97 / 0.08), transparent 60%),
+    radial-gradient(52rem 36rem at 92% 108%, rgb(196 170 122 / 0.10), transparent 62%);
 }
 .dark .auth-stage {
   background-color: var(--color-ink-950);
   background-image:
-    radial-gradient(60rem 40rem at 12% -10%, rgb(31 179 119 / 0.22), transparent 60%),
-    radial-gradient(52rem 36rem at 92% 108%, rgb(212 175 55 / 0.12), transparent 62%);
+    radial-gradient(60rem 40rem at 12% -10%, rgb(38 151 123 / 0.22), transparent 60%),
+    radial-gradient(52rem 36rem at 92% 108%, rgb(196 170 122 / 0.12), transparent 62%);
 }
 
 .auth-promo {
   background-image:
-    radial-gradient(34rem 26rem at 16% 8%, rgb(212 175 55 / 0.18), transparent 58%),
-    radial-gradient(46rem 32rem at 92% 4%, rgb(31 179 119 / 0.3), transparent 60%),
-    linear-gradient(158deg, #032214 0%, #053720 44%, #064728 72%, #032214 100%);
+    radial-gradient(34rem 26rem at 16% 8%, rgb(196 170 122 / 0.18), transparent 58%),
+    radial-gradient(46rem 32rem at 92% 4%, rgb(38 151 123 / 0.3), transparent 60%),
+    linear-gradient(158deg, #06251f 0%, #08342c 44%, #094236 72%, #06251f 100%);
 }
 
 /* Hairline edge + lift used on the panel (gold rim in the dark theme). */
@@ -732,20 +681,20 @@
 }
 .dark .auth-hairline {
   box-shadow:
-    inset 0 0 0 1px rgb(247 211 77 / 0.18),
+    inset 0 0 0 1px rgb(217 197 155 / 0.18),
     0 30px 80px rgb(0 0 0 / 0.45);
 }
 
 .auth-panel {
   background-color: var(--surface-0);
   background-image:
-    radial-gradient(38rem 24rem at 84% -12%, rgb(10 133 75 / 0.05), transparent 62%),
+    radial-gradient(38rem 24rem at 84% -12%, rgb(13 122 97 / 0.05), transparent 62%),
     linear-gradient(180deg, var(--surface-0) 0%, var(--surface-0) 62%, var(--surface-1) 100%);
 }
 .dark .auth-panel {
   background-color: var(--color-ink-950);
   background-image:
-    radial-gradient(38rem 24rem at 84% -12%, rgb(31 179 119 / 0.14), transparent 62%),
+    radial-gradient(38rem 24rem at 84% -12%, rgb(38 151 123 / 0.14), transparent 62%),
     linear-gradient(180deg, var(--color-ink-900) 0%, var(--color-ink-950) 62%, var(--color-ink-950) 100%);
 }
 
@@ -766,9 +715,9 @@
 }
 .auth-field:focus {
   outline: none;
-  border-color: rgb(10 133 75 / 0.65);
+  border-color: rgb(13 122 97 / 0.65);
   background-color: var(--surface-0);
-  box-shadow: 0 0 0 4px rgb(10 133 75 / 0.12);
+  box-shadow: 0 0 0 4px rgb(13 122 97 / 0.12);
 }
 .auth-field[aria-invalid='true'] {
   border-color: rgb(220 38 38 / 0.6);
@@ -794,7 +743,7 @@
 }
 
 .auth-gold-text {
-  background-image: linear-gradient(100deg, #fbe58a, #f7d34d 48%, #d09b06);
+  background-image: linear-gradient(100deg, #e9dcc0, #d9c59b 48%, #ad8f5c);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -809,13 +758,13 @@
     background-color var(--transition-duration-base) var(--ease-glide);
 }
 .auth-tile[data-selected='true'] {
-  background-color: rgb(247 211 77 / 0.10);
-  border-color: rgb(247 211 77 / 0.55);
+  background-color: rgb(217 197 155 / 0.10);
+  border-color: rgb(217 197 155 / 0.55);
 }
 
 /* Promo artwork: phone silhouette + gold-rimmed bag, drawn in CSS. */
 .auth-phone {
-  background-image: linear-gradient(165deg, #0a7441 0%, #032214 58%, #064728 100%);
+  background-image: linear-gradient(165deg, #0b654f 0%, #06251f 58%, #094236 100%);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.14),
     inset 0 0 0 8px rgb(0 0 0 / 0.35),
@@ -823,14 +772,14 @@
 }
 
 .auth-bag {
-  background-image: linear-gradient(160deg, #0a7441 0%, #053720 52%, #085c34 100%);
+  background-image: linear-gradient(160deg, #0b654f 0%, #08342c 52%, #0a5241 100%);
   box-shadow:
-    inset 0 0 0 1px rgb(247 211 77 / 0.35),
+    inset 0 0 0 1px rgb(217 197 155 / 0.35),
     0 26px 60px rgb(0 0 0 / 0.5);
 }
 
 .auth-ring {
-  border: 1px solid rgb(247 211 77 / 0.35);
+  border: 1px solid rgb(217 197 155 / 0.35);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -856,3 +805,24 @@
     animation: none !important;
   }
 }
+
+
+/* Premium marketplace interaction primitives */
+.gs-hero-panel { isolation: isolate; background-image: radial-gradient(34rem 24rem at 82% 12%, rgb(196 170 122 / 0.18), transparent 64%), radial-gradient(28rem 22rem at 8% 110%, rgb(38 151 123 / 0.28), transparent 62%), linear-gradient(132deg, #06251f 0%, #08342c 52%, #0a5241 100%); }
+.dark .gs-hero-panel { background-image: radial-gradient(34rem 24rem at 82% 12%, rgb(196 170 122 / 0.13), transparent 64%), radial-gradient(28rem 22rem at 8% 110%, rgb(38 151 123 / 0.2), transparent 62%), linear-gradient(132deg, #101c18 0%, #172722 56%, #20372e 100%); }
+.gs-seller-panel { background-image: radial-gradient(36rem 24rem at 86% 0%, rgb(196 170 122 / 0.12), transparent 64%), linear-gradient(130deg, #101c18 0%, #17352c 58%, #0d4d3d 100%); }
+.gs-product-card { box-shadow: 0 1px 2px rgb(25 35 29 / 0.035), 0 10px 28px -24px rgb(14 35 26 / 0.24); transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms cubic-bezier(.2,.8,.2,1), border-color 180ms ease; }
+.gs-product-card:hover { box-shadow: 0 18px 40px -28px rgb(14 35 26 / 0.30); }
+.dark .gs-product-card { box-shadow: 0 1px 0 rgb(255 255 255 / 0.035), 0 16px 36px -28px rgb(0 0 0 / 0.8); }
+.gs-tactile { position: relative; isolation: isolate; box-shadow: 0 4px 0 #073f32, 0 10px 22px -14px rgb(13 122 97 / 0.45); transform: translateY(0); transition: transform 140ms cubic-bezier(.2,.8,.2,1), box-shadow 140ms ease, filter 180ms ease; }
+.gs-tactile::after { content: ''; position: absolute; inset: 1px; border-radius: inherit; border-top: 1px solid rgb(255 255 255 / 0.22); pointer-events: none; }
+.gs-tactile:hover { filter: saturate(1.04); transform: translateY(-1px); box-shadow: 0 5px 0 #073f32, 0 14px 26px -16px rgb(13 122 97 / 0.5); }
+.gs-tactile:active { transform: translateY(3px); box-shadow: 0 1px 0 #073f32, 0 4px 12px -10px rgb(13 122 97 / 0.35); }
+.gs-receipt { position: relative; border: 1px solid var(--edge); background: linear-gradient(180deg, var(--surface-0), var(--surface-1)); box-shadow: 0 18px 42px -34px rgb(12 25 18 / 0.38); }
+.gs-receipt::after { content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 7px; background: radial-gradient(circle at 7px 0, transparent 6px, var(--surface-1) 6.5px) 0 0 / 14px 7px repeat-x; pointer-events: none; }
+.gs-receipt-rule { border-top: 1px dashed var(--edge); }
+.gs-iridescent { position: relative; isolation: isolate; overflow: hidden; }
+.gs-iridescent::before { content: ''; position: absolute; inset: -45%; z-index: 1; background: conic-gradient(from 160deg, transparent 0 18%, rgb(38 151 123 / 0.12) 27%, rgb(196 170 122 / 0.16) 36%, transparent 48% 100%); opacity: 0; transform: translateX(-12%) rotate(0deg); transition: opacity 260ms ease, transform 600ms cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.gs-iridescent:hover::before { opacity: 1; transform: translateX(8%) rotate(12deg); }
+.gs-scroll-fade { mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 28px), transparent 100%); }
+@media (prefers-reduced-motion: reduce) { .gs-tactile, .gs-product-card, .gs-iridescent::before { transition: none !important; } }

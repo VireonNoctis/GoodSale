@@ -48,7 +48,7 @@ export function ProductCard({ product, eager = false }: { product: SeoProduct; e
   const { price, compareAt, discount, flashSale } = priceFor(product);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 transition-[border-color,box-shadow] hover:border-jade-600/40 hover:shadow-[0_12px_28px_-16px_rgba(3,34,20,0.35)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-ink-200/80 bg-white transition-[border-color,box-shadow,transform] dark:border-ink-800 dark:bg-ink-900 gs-product-card hover:border-jade-600/40 hover:shadow-[0_12px_28px_-16px_rgba(3,34,20,0.35)]">
       <div className="relative aspect-square w-full overflow-hidden bg-ink-100 dark:bg-ink-850">
         <Link href={`/products/${product.id}`} className="block h-full w-full">
           {image ? (
@@ -89,8 +89,8 @@ export function ProductCard({ product, eager = false }: { product: SeoProduct; e
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-2">
-        <h3 className="line-clamp-2 min-h-[2rem] text-[12px] font-semibold leading-4 text-ink-900 dark:text-ink-100">
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
+        <h3 className="line-clamp-2 min-h-[2rem] text-[13px] font-semibold leading-[1.35] text-ink-900 dark:text-ink-100">
           <Link href={`/products/${product.id}`} className="hover:text-jade-700 dark:hover:text-jade-300">
             {product.title}
           </Link>
@@ -109,7 +109,7 @@ export function ProductCard({ product, eager = false }: { product: SeoProduct; e
         </span>
 
         <p className="flex flex-wrap items-baseline gap-1.5">
-          <span className="text-[15px] font-extrabold leading-5 tracking-tight text-ink-900 dark:text-white">{naira(price)}</span>
+          <span className="text-[16px] font-extrabold leading-5 tracking-tight text-ink-900 dark:text-white">{naira(price)}</span>
           {compareAt > price && (
             <span className="text-[10px] font-medium text-ink-400 dark:text-ink-500 line-through">{naira(compareAt)}</span>
           )}

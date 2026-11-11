@@ -65,7 +65,7 @@ export default function MarketplaceHeader({
   }, [db.products, db.profiles]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-ink-150 bg-white text-ink-900 shadow-sm transition-colors duration-300 dark:border-jade-800/70 dark:bg-jade-950 dark:text-white dark:shadow-lg dark:shadow-jade-950/20">
+    <header className="sticky top-0 z-50 w-full border-b border-ink-200/80 bg-white/95 text-ink-900 shadow-[0_8px_30px_-24px_rgba(23,29,26,0.28)] backdrop-blur-xl transition-colors duration-300 dark:border-ink-800/80 dark:bg-ink-950/95 dark:text-ink-50 dark:shadow-xl dark:shadow-black/20">
       {/* aurora glow — dark skin only */}
       <div
         aria-hidden
@@ -87,8 +87,8 @@ export default function MarketplaceHeader({
             <Logo
               iconSize={38}
               textColorClass="text-ink-900 dark:text-white"
-              subtitleColorClass="text-ink-400 dark:text-gold-300"
-              accentClassName="from-jade-500 to-jade-700 dark:from-gold-300 dark:to-gold-400"
+              subtitleColorClass="text-ink-400 dark:text-jade-300"
+              accentClassName="from-jade-500 to-jade-700 dark:from-jade-300 dark:to-jade-500"
             />
           </button>
 
@@ -146,7 +146,7 @@ export default function MarketplaceHeader({
         {/* Row 2 — location + search + cart */}
         <div className="flex items-center gap-2 pb-3">
           <label className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-ink-200 bg-ink-50 pl-2.5 pr-2 transition-colors dark:border-white/25 dark:bg-white/10">
-            <MapPin className="h-4 w-4 shrink-0 text-jade-600 dark:text-gold-300" />
+            <MapPin className="h-4 w-4 shrink-0 text-jade-600 dark:text-jade-300" />
             <span className="flex min-w-0 flex-col justify-center leading-none">
               <span className="text-[8px] font-semibold uppercase tracking-wider text-ink-500 dark:text-jade-200">Deliver to</span>
               <select

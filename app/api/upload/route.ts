@@ -9,6 +9,32 @@ const BUCKETS = new Set(['product-images', 'chat-media', 'government-ids', 'avat
 const IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 const VIDEO_MAX_BYTES = 25 * 1024 * 1024;
 
+const ALLOWED_MIME_TYPES: Record<string, Set<string>> = {
+  'product-images': new Set(['image/jpeg','image/png','image/webp','image/avif','image/gif','video/mp4','video/webm','video/quicktime']),
+  'chat-media': new Set(['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime']),
+  'government-ids': new Set(['image/jpeg','image/png','image/webp','application/pdf']),
+  avatars: new Set(['image/jpeg','image/png','image/webp']),
+  'ad-media': new Set(['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime']),
+};
+const MIME_EXTENSIONS: Record<string,string> = {
+  'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif','image/gif':'gif',
+  'application/pdf':'pdf','video/mp4':'mp4','video/webm':'webm','video/quicktime':'mov',
+};
+function hasValidFileSignature(buffer: Buffer,mimeType: string): boolean {
+  switch(mimeType) {
+    case 'image/jpeg': return buffer.length>3&&buffer[0]===0xff&&buffer[1]===0xd8&&buffer[2]===0xff;
+    case 'image/png': return buffer.length>8&&buffer.subarray(0,8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]));
+    case 'image/webp': return buffer.length>12&&buffer.toString('ascii',0,4)==='RIFF'&&buffer.toString('ascii',8,12)==='WEBP';
+    case 'image/gif': return buffer.toString('ascii',0,6)==='GIF87a'||buffer.toString('ascii',0,6)==='GIF89a';
+    case 'image/avif': return buffer.length>12&&buffer.toString('ascii',4,8)==='ftyp'&&/^(avif|avis)$/.test(buffer.toString('ascii',8,12));
+    case 'application/pdf': return buffer.toString('ascii',0,5)==='%PDF-';
+    case 'video/mp4': return buffer.length>12&&buffer.toString('ascii',4,8)==='ftyp';
+    case 'video/quicktime': return buffer.length>12&&buffer.toString('ascii',4,8)==='ftyp'&&buffer.toString('ascii',8,12)==='qt  ';
+    case 'video/webm': return buffer.length>4&&buffer.subarray(0,4).equals(Buffer.from([0x1a,0x45,0xdf,0xa3]));
+    default: return false;
+  }
+}
+
 // Checking storage on every upload adds a network round trip to every image.
 // Buckets change rarely, so remember successful checks for this server process.
 const ensuredBuckets = new Set<string>();
@@ -148,25 +174,35 @@ export async function POST(req: NextRequest) {
 
     const admin = createAdminClient();
 
-    const isVideo = file.type.startsWith('video/');
-    const maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
-    if (file.size <= 0 || file.size > maxBytes) {
-      return NextResponse.json(
-        { success: false, error: `File must be under ${Math.round(maxBytes / 1024 / 1024)}MB` },
-        { status: 413 }
-      );
+    if (bucket === 'ad-media') {
+      if (!admin) return NextResponse.json({success:false,error:'Advertising service is not configured'},{status:503});
+      const {data:profile,error:profileError}=await admin.from('profiles').select('role').eq('auth_id',user.id).maybeSingle();
+      if (profileError) {
+        logger.warn('Could not verify advertising upload permission',{error:profileError.message});
+        return NextResponse.json({success:false,error:'Could not verify upload permission'},{status:503});
+      }
+      if (!profile||!['ADMIN','SUPER_ADMIN'].includes(String(profile.role))) return NextResponse.json({success:false,error:'Admin only'},{status:403});
     }
-
-    // First-run safety, cached for the life of the server process.
-    await ensureBucket(admin, bucket);
-
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!ALLOWED_MIME_TYPES[bucket]?.has(file.type)) {
+      return NextResponse.json({success:false,error:'This file type is not allowed for the selected upload'},{status:415});
+    }
+    const isVideo=file.type.startsWith('video/');
+    const maxBytes=isVideo?VIDEO_MAX_BYTES:IMAGE_MAX_BYTES;
+    if(file.size<=0||file.size>maxBytes) {
+      return NextResponse.json({success:false,error:`File must be under ${Math.round(maxBytes/1024/1024)}MB`},{status:413});
+    }
+    const buffer=Buffer.from(await file.arrayBuffer());
+    if(!hasValidFileSignature(buffer,file.type)) {
+      return NextResponse.json({success:false,error:'The file content does not match its declared type'},{status:415});
+    }
+    await ensureBucket(admin,bucket);
+    const ext=MIME_EXTENSIONS[file.type];
+    const path=`${user.id}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const safeFilename=`goodsale-upload.${ext}`;
 
     // Identity documents always stay private on Supabase Storage.
     if (bucket !== 'government-ids' && cloudinaryConfigured()) {
-      const cdn = await uploadToCloudinary(buffer, file.name || path, file.type);
+      const cdn = await uploadToCloudinary(buffer, safeFilename, file.type);
       if (cdn) {
         return NextResponse.json({
           success: true,
@@ -185,7 +221,7 @@ export async function POST(req: NextRequest) {
     // a second upload on every request.
     const uploader = admin || supabase;
     const { error: uploadError } = await uploader.storage.from(bucket).upload(path, buffer, {
-      contentType: file.type || 'application/octet-stream',
+      contentType: file.type,
       cacheControl: '31536000',
       upsert: false,
     });

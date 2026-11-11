@@ -85,7 +85,7 @@ export default function ProductTile({
   return (
     <article
       onClick={onSelect}
-      className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-ink-150 bg-white transition-[border-color,box-shadow,transform] duration-200 ease-glide hover:-translate-y-px hover:border-jade-500/40 hover:shadow-[0_12px_28px_-16px_rgba(3,34,20,0.35)] motion-reduce:transform-none motion-reduce:transition-none dark:border-ink-800 dark:bg-ink-900 dark:hover:border-jade-500/40 ${className}`}
+      className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border border-ink-200/80 bg-white transition-[border-color,box-shadow,transform] duration-200 ease-glide hover:-translate-y-1 hover:border-jade-500/45 motion-reduce:transform-none motion-reduce:transition-none dark:border-ink-800 dark:bg-ink-900 dark:hover:border-jade-400/40 gs-product-card ${badge === 'featured' ? 'gs-iridescent' : ''} ${className}`}
     >
       {/* ── media ── */}
       <div className="relative aspect-square w-full overflow-hidden bg-ink-50 dark:bg-ink-950">
@@ -115,7 +115,7 @@ export default function ProductTile({
             </span>
           )}
           {statusBadge && (
-            <span className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase leading-4 tracking-wide shadow-sm ${BADGE_STYLES[statusBadge]}`}>
+            <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase leading-4 tracking-wide shadow-sm ${BADGE_STYLES[statusBadge]}`}>
               {BADGE_LABELS[statusBadge]}
             </span>
           )}
@@ -148,8 +148,8 @@ export default function ProductTile({
       </div>
 
       {/* ── body ── */}
-      <div className="flex flex-1 flex-col gap-1 p-2">
-        <h3 className="line-clamp-2 min-h-[2rem] text-[12px] font-semibold leading-4 text-ink-900 dark:text-ink-100">
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
+        <h3 className="line-clamp-2 min-h-[2rem] text-[13px] font-semibold leading-[1.35] text-ink-900 dark:text-ink-100">
           <button
             type="button"
             onClick={(event) => {
@@ -177,7 +177,7 @@ export default function ProductTile({
         </div>
 
         <div className="flex flex-wrap items-baseline gap-1.5">
-          <span className="text-[15px] font-extrabold leading-5 tracking-tight text-ink-900 dark:text-white">
+          <span className="text-[16px] font-extrabold leading-5 tracking-tight text-ink-900 dark:text-white">
             {naira(price)}
           </span>
           {discount > 0 && compareAt > price && (
@@ -217,7 +217,7 @@ export default function ProductTile({
             }}
             disabled={soldOut}
             aria-label={`Add ${product.title} to cart`}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-jade-500/10 text-jade-700 transition-colors hover:bg-jade-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:text-jade-300 focus-ring"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-jade-500/10 text-jade-700 transition-colors hover:bg-jade-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:text-jade-300 focus-ring"
           >
             {flashSale ? <Zap className="h-3.5 w-3.5" /> : <ShoppingCart className="h-3.5 w-3.5" />}
           </button>

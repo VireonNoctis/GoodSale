@@ -44,7 +44,7 @@ export default function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex select-none items-center justify-center font-bold tracking-tight transition-all duration-200 ease-glide press-scale focus-ring disabled:pointer-events-auto disabled:opacity-50 cursor-pointer ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex select-none items-center justify-center font-bold tracking-tight transition-all duration-200 ease-glide press-scale focus-ring disabled:pointer-events-auto disabled:opacity-50 cursor-pointer ${variants[variant]} ${variant === 'primary' ? 'gs-tactile' : ''} ${sizes[size]} ${className}`}
       {...rest}
     >
       {loading ? (
