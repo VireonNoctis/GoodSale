@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   rust:
@@ -27,7 +27,24 @@ jobs:
         with:
           workspaces: backend -> target
 
-      - name: Format
+      - name: Format Rust sources
+        if: github.event_name == 'push' && github.ref_name == 'premium-marketplace-rework'
+        working-directory: backend
+        run: cargo fmt --all
+
+      - name: Commit rustfmt changes on the fork branch
+        if: github.event_name == 'push' && github.ref_name == 'premium-marketplace-rework'
+        run: |
+          if [ -n "$(git status --porcelain backend/src)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add backend/src
+            git commit -m "chore: format Rust backend"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Verify formatting
+        if: github.event_name != 'push' || github.ref_name != 'premium-marketplace-rework'
         working-directory: backend
         run: cargo fmt --all -- --check
 
