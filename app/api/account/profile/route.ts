@@ -54,6 +54,22 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
     }
 
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
+    if (rustBackend) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+      const upstream = await fetch(`${rustBackend}/v1/account/profile`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        cache: 'no-store',
+      });
+      const payload = await upstream.json().catch(() => ({ success: false, error: 'Account service returned an invalid response' }));
+      return NextResponse.json(payload, { status: upstream.status });
+    }
+
     const p = body.profile ?? {};
     const profileUpdate: Record<string, string | null> = {};
     if (str(p.fullName) !== undefined) profileUpdate.full_name = p.fullName!.trim();
