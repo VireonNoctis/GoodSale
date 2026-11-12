@@ -4,6 +4,7 @@ mod rate_limit;
 mod rpc;
 mod security;
 mod uploads;
+mod wallet_premium;
 
 use axum::{
     body::Body,
@@ -352,6 +353,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/v1/rpc/:name",
             post(rpc::user_rpc).layer(DefaultBodyLimit::max(256 * 1024)),
+        )
+        .route(
+            "/v1/wallet/fund/verify",
+            post(wallet_premium::verify_wallet).layer(DefaultBodyLimit::max(16 * 1024)),
+        )
+        .route(
+            "/v1/premium/subscriptions/verify",
+            post(wallet_premium::verify_premium).layer(DefaultBodyLimit::max(16 * 1024)),
         )
         .route(
             "/v1/admin/rpc/:name",
