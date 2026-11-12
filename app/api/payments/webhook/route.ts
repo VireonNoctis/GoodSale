@@ -42,14 +42,14 @@ export async function POST(req: NextRequest) {
       // server-to-server verify call — never from the browser callback.
       if (reference.startsWith('GSP_')) {
         const premium = await callRustInternalRpc('premium_activation_event', { reference });
-        return NextResponse.json({ success: premium.success, received: true, premium });
+        return NextResponse.json({ success: !premium.error, received: true, premium: premium.data, ...(premium.error ? { error: premium.error.message } : {}) });
       }
 
       // Wallet funding is credited only after the signed event, amount and
       // intent identity are checked against the funding record.
       if (walletFundingId || reference.startsWith('GSW_')) {
         const funding = await callRustInternalRpc('wallet_funding_event', { reference });
-        return NextResponse.json({ success: funding.success, received: true, funding });
+        return NextResponse.json({ success: !funding.error, received: true, funding: funding.data, ...(funding.error ? { error: funding.error.message } : {}) });
       }
 
       const reconciliation = await callRustInternalRpc('order_payment_event', { reference });
