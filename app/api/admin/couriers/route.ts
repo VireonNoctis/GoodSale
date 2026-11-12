@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
       if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 409 });
       }
-      return NextResponse.json({ success: true, data: { ...data, labelUrl: shipment.labelUrl || '' } });
+      return NextResponse.json({ success: true, data: { ...(data && typeof data === 'object' ? data as Record<string, unknown> : {}), labelUrl: shipment.labelUrl || '' } });
     }
 
     if (action === 'SYNC') {
