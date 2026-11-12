@@ -577,6 +577,7 @@ mod tests {
     fn calculates_deposit_and_balance_due() {
         let deposit = OrderRow {
             id: 1,
+            buyer_id: 2,
             total_amount: 1000.0,
             status: "PENDING".into(),
             payment_method: "PARTIAL".into(),
@@ -586,6 +587,7 @@ mod tests {
         assert_eq!(deposit.payment_due(), 300.0);
         let balance = OrderRow {
             id: 1,
+            buyer_id: 2,
             total_amount: 1000.0,
             status: "PARTIAL_DEPOSIT_PAID".into(),
             payment_method: "PARTIAL".into(),

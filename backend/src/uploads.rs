@@ -259,7 +259,7 @@ pub async fn upload(
     let mut mime = String::new();
 
     loop {
-        let mut field = match multipart.next_field().await {
+        let field = match multipart.next_field().await {
             Ok(Some(field)) => field,
             Ok(None) => break,
             Err(_) => {
