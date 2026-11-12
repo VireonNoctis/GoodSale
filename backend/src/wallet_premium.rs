@@ -56,18 +56,39 @@ async fn auth_user_id(state: &AppState, headers: &HeaderMap) -> Result<String, S
         .ok_or(StatusCode::UNAUTHORIZED)
 }
 async fn auth_email(state: &AppState, headers: &HeaderMap) -> Result<String, StatusCode> {
-    let token = headers.get(header::AUTHORIZATION)
+    let token = headers
+        .get(header::AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "))
         .filter(|value| !value.is_empty())
         .ok_or(StatusCode::UNAUTHORIZED)?;
-    let base = state.settings.supabase_url.as_ref().ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
-    let anon = state.settings.supabase_anon_key.as_ref().ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
-    let response = state.http.get(format!("{}/auth/v1/user", base.trim_end_matches('/')))
-        .header("apikey", anon).bearer_auth(token).send().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
-    if !response.status().is_success() { return Err(StatusCode::UNAUTHORIZED); }
+    let base = state
+        .settings
+        .supabase_url
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let anon = state
+        .settings
+        .supabase_anon_key
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let response = state
+        .http
+        .get(format!("{}/auth/v1/user", base.trim_end_matches('/')))
+        .header("apikey", anon)
+        .bearer_auth(token)
+        .send()
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+    if !response.status().is_success() {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
     let user: Value = response.json().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
-    Ok(user.get("email").and_then(Value::as_str).unwrap_or_default().to_owned())
+    Ok(user
+        .get("email")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned())
 }
 
 async fn profile_id(state: &AppState, auth_id: &str) -> Result<i64, StatusCode> {
@@ -439,32 +460,80 @@ pub async fn verify_premium_event(state: &AppState, reference: &str) -> Result<V
     premium_activation(state, reference, None).await
 }
 fn number_field(value: Option<&Value>) -> Option<f64> {
-    value.and_then(|v| v.as_f64().or_else(|| v.as_str().and_then(|raw| raw.parse::<f64>().ok())))
+    value.and_then(|v| {
+        v.as_f64()
+            .or_else(|| v.as_str().and_then(|raw| raw.parse::<f64>().ok()))
+    })
 }
 
 async fn profile_is_suspended(state: &AppState, profile_id: i64) -> Result<bool, StatusCode> {
-    let base = state.settings.supabase_url.as_ref().ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
-    let service = state.settings.supabase_service_role_key.as_ref().ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
-    let response = state.http.get(format!("{}/rest/v1/profiles", base.trim_end_matches('/')))
-        .header("apikey", service).bearer_auth(service)
-        .query(&[("select", "is_suspended"), ("id", format!("eq.{profile_id}").as_str()), ("limit", "1")])
-        .send().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
-    if !response.status().is_success() { return Err(StatusCode::BAD_GATEWAY); }
+    let base = state
+        .settings
+        .supabase_url
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let service = state
+        .settings
+        .supabase_service_role_key
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let response = state
+        .http
+        .get(format!("{}/rest/v1/profiles", base.trim_end_matches('/')))
+        .header("apikey", service)
+        .bearer_auth(service)
+        .query(&[
+            ("select", "is_suspended"),
+            ("id", format!("eq.{profile_id}").as_str()),
+            ("limit", "1"),
+        ])
+        .send()
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+    if !response.status().is_success() {
+        return Err(StatusCode::BAD_GATEWAY);
+    }
     let rows: Vec<Value> = response.json().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
-    Ok(rows.first().and_then(|v| v.get("is_suspended")).and_then(Value::as_bool).unwrap_or(false))
+    Ok(rows
+        .first()
+        .and_then(|v| v.get("is_suspended"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false))
 }
 
-async fn insert_service_row(state: &AppState, table: &str, value: Value) -> Result<Value, StatusCode> {
-    let base = state.settings.supabase_url.as_ref().ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
-    let service = state.settings.supabase_service_role_key.as_ref().ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
-    let response = state.http.post(format!("{}/rest/v1/{table}", base.trim_end_matches('/')))
-        .header("apikey", service).bearer_auth(service)
+async fn insert_service_row(
+    state: &AppState,
+    table: &str,
+    value: Value,
+) -> Result<Value, StatusCode> {
+    let base = state
+        .settings
+        .supabase_url
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let service = state
+        .settings
+        .supabase_service_role_key
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let response = state
+        .http
+        .post(format!("{}/rest/v1/{table}", base.trim_end_matches('/')))
+        .header("apikey", service)
+        .bearer_auth(service)
         .header("Prefer", "return=representation")
-        .json(&value).send().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
+        .json(&value)
+        .send()
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
     if !response.status().is_success() {
         let code = response.status();
         tracing::warn!(table, status=%code, "Payment intent insertion rejected");
-        return Err(if code.is_client_error() { StatusCode::BAD_REQUEST } else { StatusCode::BAD_GATEWAY });
+        return Err(if code.is_client_error() {
+            StatusCode::BAD_REQUEST
+        } else {
+            StatusCode::BAD_GATEWAY
+        });
     }
     let rows: Vec<Value> = response.json().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
     rows.into_iter().next().ok_or(StatusCode::BAD_GATEWAY)
@@ -472,7 +541,10 @@ async fn insert_service_row(state: &AppState, table: &str, value: Value) -> Resu
 
 fn new_payment_reference(prefix: &str, profile_id: i64) -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let millis = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis();
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
     let suffix = Uuid::new_v4().simple().to_string().to_ascii_uppercase();
     format!("{prefix}_{profile_id}_{millis}_{}", &suffix[..8])
 }
@@ -491,58 +563,142 @@ pub async fn initialize_wallet(
         Err(code) => return fail(code, "Your account profile could not be verified."),
     };
     let email = auth_email(&state, &headers).await.unwrap_or_default();
-    match state.limiter.check(&format!("wallet:init:{profile}"), 10, std::time::Duration::from_secs(60)).await {
+    match state
+        .limiter
+        .check(
+            &format!("wallet:init:{profile}"),
+            10,
+            std::time::Duration::from_secs(60),
+        )
+        .await
+    {
         Ok(decision) if decision.allowed => {}
-        Ok(decision) => return fail(StatusCode::TOO_MANY_REQUESTS, &format!("Too many funding attempts. Retry in {} seconds.", decision.retry_after_secs)),
-        Err(_) => return fail(StatusCode::SERVICE_UNAVAILABLE, "Wallet request protection is unavailable."),
+        Ok(decision) => {
+            return fail(
+                StatusCode::TOO_MANY_REQUESTS,
+                &format!(
+                    "Too many funding attempts. Retry in {} seconds.",
+                    decision.retry_after_secs
+                ),
+            )
+        }
+        Err(_) => {
+            return fail(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Wallet request protection is unavailable.",
+            )
+        }
     }
     if profile_is_suspended(&state, profile).await.unwrap_or(true) {
         return fail(StatusCode::FORBIDDEN, "This account cannot fund a wallet.");
     }
-    if std::env::var("PAYSTACK_SECRET_KEY").ok().filter(|v| !v.is_empty()).is_none()
-        || std::env::var("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY").ok().filter(|v| !v.is_empty()).is_none() {
-        return fail(StatusCode::SERVICE_UNAVAILABLE, "Wallet funding is not configured.");
+    if std::env::var("PAYSTACK_SECRET_KEY")
+        .ok()
+        .filter(|v| !v.is_empty())
+        .is_none()
+        || std::env::var("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY")
+            .ok()
+            .filter(|v| !v.is_empty())
+            .is_none()
+    {
+        return fail(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Wallet funding is not configured.",
+        );
     }
 
     let amount = number_field(body.get("amount"));
-    let Some(amount) = amount.filter(|v| v.is_finite() && *v > 0.0 && ((v * 100.0).round() - v * 100.0).abs() < 0.001) else {
+    let Some(amount) = amount
+        .filter(|v| v.is_finite() && *v > 0.0 && ((v * 100.0).round() - v * 100.0).abs() < 0.001)
+    else {
         return fail(StatusCode::BAD_REQUEST, "Enter a valid amount.");
     };
 
     let base = match state.settings.supabase_url.as_ref() {
         Some(value) => value.trim_end_matches('/'),
-        None => return fail(StatusCode::SERVICE_UNAVAILABLE, "Wallet database is not configured."),
+        None => {
+            return fail(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Wallet database is not configured.",
+            )
+        }
     };
     let service = match state.settings.supabase_service_role_key.as_ref() {
         Some(value) => value,
-        None => return fail(StatusCode::SERVICE_UNAVAILABLE, "Wallet database is not configured."),
+        None => {
+            return fail(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Wallet database is not configured.",
+            )
+        }
     };
-    let settings_res = match state.http.get(format!("{base}/rest/v1/wallet_settings"))
-        .header("apikey", service).bearer_auth(service)
-        .query(&[("select", "funding_min,funding_max"), ("id", "eq.1"), ("limit", "1")])
-        .send().await {
-            Ok(value) => value,
-            Err(_) => return fail(StatusCode::BAD_GATEWAY, "Wallet settings could not be loaded."),
-        };
+    let settings_res = match state
+        .http
+        .get(format!("{base}/rest/v1/wallet_settings"))
+        .header("apikey", service)
+        .bearer_auth(service)
+        .query(&[
+            ("select", "funding_min,funding_max"),
+            ("id", "eq.1"),
+            ("limit", "1"),
+        ])
+        .send()
+        .await
+    {
+        Ok(value) => value,
+        Err(_) => {
+            return fail(
+                StatusCode::BAD_GATEWAY,
+                "Wallet settings could not be loaded.",
+            )
+        }
+    };
     let settings: Vec<Value> = match settings_res.json().await {
         Ok(value) => value,
-        Err(_) => return fail(StatusCode::BAD_GATEWAY, "Wallet settings could not be read."),
+        Err(_) => {
+            return fail(
+                StatusCode::BAD_GATEWAY,
+                "Wallet settings could not be read.",
+            )
+        }
     };
-    let min = settings.first().and_then(|v| number_field(v.get("funding_min"))).unwrap_or(100.0);
-    let max = settings.first().and_then(|v| number_field(v.get("funding_max"))).unwrap_or(500_000.0);
-    if amount < min { return fail(StatusCode::BAD_REQUEST, &format!("Minimum wallet funding is ₦{min:.0}.")); }
-    if amount > max { return fail(StatusCode::BAD_REQUEST, &format!("Maximum wallet funding is ₦{max:.0}.")); }
+    let min = settings
+        .first()
+        .and_then(|v| number_field(v.get("funding_min")))
+        .unwrap_or(100.0);
+    let max = settings
+        .first()
+        .and_then(|v| number_field(v.get("funding_max")))
+        .unwrap_or(500_000.0);
+    if amount < min {
+        return fail(
+            StatusCode::BAD_REQUEST,
+            &format!("Minimum wallet funding is ₦{min:.0}."),
+        );
+    }
+    if amount > max {
+        return fail(
+            StatusCode::BAD_REQUEST,
+            &format!("Maximum wallet funding is ₦{max:.0}."),
+        );
+    }
 
     let reference = new_payment_reference("GSW", profile);
-    let intent = match insert_service_row(&state, "wallet_funding_intents", json!({
-        "user_id": profile,
-        "reference": reference,
-        "provider": "paystack",
-        "amount": amount,
-        "currency": "NGN",
-        "status": "PENDING",
-        "metadata": { "source": "wallet" }
-    })).await {
+    let intent = match insert_service_row(
+        &state,
+        "wallet_funding_intents",
+        json!({
+            "user_id": profile,
+            "reference": reference,
+            "provider": "paystack",
+            "amount": amount,
+            "currency": "NGN",
+            "status": "PENDING",
+            "metadata": { "source": "wallet" }
+        }),
+    )
+    .await
+    {
         Ok(value) => value,
         Err(code) => return fail(code, "Could not create a wallet funding request."),
     };
@@ -557,8 +713,9 @@ pub async fn initialize_wallet(
             "publicKey": std::env::var("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY").unwrap_or_default(),
             "intentId": intent.get("id"),
             "provider": "paystack"
-        }))
-    ).into_response()
+        })),
+    )
+        .into_response()
 }
 
 pub async fn initialize_premium(
@@ -575,36 +732,92 @@ pub async fn initialize_premium(
         Err(code) => return fail(code, "Your account profile could not be verified."),
     };
     let email = auth_email(&state, &headers).await.unwrap_or_default();
-    match state.limiter.check(&format!("premium:init:{profile}"), 8, std::time::Duration::from_secs(60)).await {
+    match state
+        .limiter
+        .check(
+            &format!("premium:init:{profile}"),
+            8,
+            std::time::Duration::from_secs(60),
+        )
+        .await
+    {
         Ok(decision) if decision.allowed => {}
-        Ok(decision) => return fail(StatusCode::TOO_MANY_REQUESTS, &format!("Too many membership attempts. Retry in {} seconds.", decision.retry_after_secs)),
-        Err(_) => return fail(StatusCode::SERVICE_UNAVAILABLE, "Membership request protection is unavailable."),
+        Ok(decision) => {
+            return fail(
+                StatusCode::TOO_MANY_REQUESTS,
+                &format!(
+                    "Too many membership attempts. Retry in {} seconds.",
+                    decision.retry_after_secs
+                ),
+            )
+        }
+        Err(_) => {
+            return fail(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Membership request protection is unavailable.",
+            )
+        }
     }
     if profile_is_suspended(&state, profile).await.unwrap_or(true) {
-        return fail(StatusCode::FORBIDDEN, "This account cannot purchase a membership.");
+        return fail(
+            StatusCode::FORBIDDEN,
+            "This account cannot purchase a membership.",
+        );
     }
-    if std::env::var("PAYSTACK_SECRET_KEY").ok().filter(|v| !v.is_empty()).is_none()
-        || std::env::var("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY").ok().filter(|v| !v.is_empty()).is_none() {
-        return fail(StatusCode::SERVICE_UNAVAILABLE, "Membership checkout is not configured.");
+    if std::env::var("PAYSTACK_SECRET_KEY")
+        .ok()
+        .filter(|v| !v.is_empty())
+        .is_none()
+        || std::env::var("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY")
+            .ok()
+            .filter(|v| !v.is_empty())
+            .is_none()
+    {
+        return fail(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Membership checkout is not configured.",
+        );
     }
 
-    let product = body.get("product").and_then(Value::as_str).unwrap_or("").to_ascii_uppercase();
-    let plan = body.get("planCode").and_then(Value::as_str).unwrap_or("").to_ascii_uppercase();
+    let product = body
+        .get("product")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_ascii_uppercase();
+    let plan = body
+        .get("planCode")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_ascii_uppercase();
     if product != "VERIFIED_PLUS" && product != "BUSINESS" {
         return fail(StatusCode::BAD_REQUEST, "Choose a valid membership.");
     }
     if product == "BUSINESS" && !matches!(plan.as_str(), "PRO" | "PREMIUM" | "ENTERPRISE") {
         return fail(StatusCode::BAD_REQUEST, "Choose a valid Business plan.");
     }
-    let plan_code = if product == "VERIFIED_PLUS" { "VERIFIED_PLUS" } else { plan.as_str() };
+    let plan_code = if product == "VERIFIED_PLUS" {
+        "VERIFIED_PLUS"
+    } else {
+        plan.as_str()
+    };
 
     let base = match state.settings.supabase_url.as_ref() {
         Some(value) => value.trim_end_matches('/'),
-        None => return fail(StatusCode::SERVICE_UNAVAILABLE, "Membership database is not configured."),
+        None => {
+            return fail(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Membership database is not configured.",
+            )
+        }
     };
     let service = match state.settings.supabase_service_role_key.as_ref() {
         Some(value) => value,
-        None => return fail(StatusCode::SERVICE_UNAVAILABLE, "Membership database is not configured."),
+        None => {
+            return fail(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Membership database is not configured.",
+            )
+        }
     };
     let pricing_res = match state.http.get(format!("{base}/rest/v1/revenue_settings"))
         .header("apikey", service).bearer_auth(service)
@@ -618,33 +831,53 @@ pub async fn initialize_premium(
         };
     let pricing_rows: Vec<Value> = match pricing_res.json().await {
         Ok(value) => value,
-        Err(_) => return fail(StatusCode::BAD_GATEWAY, "Membership pricing could not be read."),
+        Err(_) => {
+            return fail(
+                StatusCode::BAD_GATEWAY,
+                "Membership pricing could not be read.",
+            )
+        }
     };
     let settings = pricing_rows.first().cloned().unwrap_or_else(|| json!({}));
     let raw_amount = match (product.as_str(), plan.as_str()) {
         ("VERIFIED_PLUS", _) => number_field(settings.get("verified_plus_price")).unwrap_or(2500.0),
         ("BUSINESS", "PRO") => number_field(settings.get("sub_pro_price")).unwrap_or(15000.0),
-        ("BUSINESS", "PREMIUM") => number_field(settings.get("sub_premium_price")).unwrap_or(12500.0),
-        ("BUSINESS", "ENTERPRISE") => number_field(settings.get("sub_enterprise_price")).unwrap_or(85000.0),
+        ("BUSINESS", "PREMIUM") => {
+            number_field(settings.get("sub_premium_price")).unwrap_or(12500.0)
+        }
+        ("BUSINESS", "ENTERPRISE") => {
+            number_field(settings.get("sub_enterprise_price")).unwrap_or(85000.0)
+        }
         _ => 0.0,
     };
-    let duration = number_field(settings.get("premium_duration_days")).unwrap_or(30.0).max(1.0) as i64;
+    let duration = number_field(settings.get("premium_duration_days"))
+        .unwrap_or(30.0)
+        .max(1.0) as i64;
     if !raw_amount.is_finite() || raw_amount <= 0.0 || raw_amount > 100_000_000.0 {
-        return fail(StatusCode::CONFLICT, "This membership is not available for purchase right now.");
+        return fail(
+            StatusCode::CONFLICT,
+            "This membership is not available for purchase right now.",
+        );
     }
     let amount_kobo = (raw_amount * 100.0).round() as i64;
     let amount = amount_kobo as f64 / 100.0;
     let reference = new_payment_reference("GSP", profile);
-    let intent = match insert_service_row(&state, "premium_subscription_payments", json!({
-        "user_id": profile,
-        "product": product,
-        "plan_code": plan_code,
-        "reference": reference,
-        "amount": amount,
-        "currency": "NGN",
-        "status": "PENDING",
-        "provider": "paystack"
-    })).await {
+    let intent = match insert_service_row(
+        &state,
+        "premium_subscription_payments",
+        json!({
+            "user_id": profile,
+            "product": product,
+            "plan_code": plan_code,
+            "reference": reference,
+            "amount": amount,
+            "currency": "NGN",
+            "status": "PENDING",
+            "provider": "paystack"
+        }),
+    )
+    .await
+    {
         Ok(value) => value,
         Err(code) => return fail(code, "Could not create the membership checkout."),
     };
@@ -663,8 +896,7 @@ pub async fn initialize_premium(
             "planCode": plan_code,
             "paymentId": intent.get("id"),
             "provider": "paystack"
-        }))
-    ).into_response()
+        })),
+    )
+        .into_response()
 }
-
-
