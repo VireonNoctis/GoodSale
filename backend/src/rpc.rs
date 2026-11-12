@@ -47,6 +47,9 @@ const USER_RPCS: &[&str] = &[
     "record_sponsored_ad_event_v2",
     "purchase_featured_promotion",
     "purchase_flash_sale",
+    "redeem_good_points",
+    "set_my_account_suspended",
+    "request_order_refund",
 ];
 const ADMIN_RPCS: &[&str] = &[
     "admin_auto_assign_delivery",
