@@ -28,6 +28,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\\/+$/, '');
+    if (rustBackend) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      const upstream = await fetch(`${rustBackend}/v1/wallet/fund/initialize`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        cache: 'no-store',
+      });
+      const payload = await upstream.json().catch(() => ({ success: false, error: 'Wallet service returned an invalid response' }));
+      return NextResponse.json(payload, { status: upstream.status });
+    }
+
     const provider = getWalletProviderConfig();
     if (!provider.fundingEnabled) {
       return NextResponse.json(
@@ -45,7 +60,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Wallet service is not configured' }, { status: 503 });
     }
 
-    const body = await req.json().catch(() => ({}));
     const amount = Number(body.amount);
     if (
       !Number.isFinite(amount) ||
