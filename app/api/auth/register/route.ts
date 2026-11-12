@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
 
         if (profile?.id) {
-          const { data: attributed, error: referralError } = await callRustInternalRpc(
+          const { data: attributed, error: referralError } = await callRustInternalRpc<{ success?: boolean }>(
             'attribute_referral',
             {
               p_referee_id: profile.id,
