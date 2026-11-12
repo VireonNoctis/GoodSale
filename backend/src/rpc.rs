@@ -47,6 +47,13 @@ const USER_RPCS: &[&str] = &[
     "record_sponsored_ad_event_v2",
     "purchase_featured_promotion",
     "purchase_flash_sale",
+    "list_my_buyer_addresses",
+    "save_my_buyer_address",
+    "delete_my_buyer_address",
+    "list_my_support_tickets",
+    "create_my_support_ticket",
+    "list_my_buyer_protection_claims",
+    "open_my_buyer_protection_claim",
     "redeem_good_points",
     "set_my_account_suspended",
     "request_order_refund",
@@ -82,6 +89,8 @@ const ADMIN_RPCS: &[&str] = &[
     "run_premium_jobs",
     "expire_rider_assignments",
     "resolve_dispute",
+    "admin_list_buyer_protection_claims",
+    "admin_review_buyer_protection_claim",
 ];
 const PUBLIC_RPCS: &[&str] = &["seller_public_verification", "shipment_tracking_lookup"];
 const INTERNAL_RPCS: &[&str] = &[
