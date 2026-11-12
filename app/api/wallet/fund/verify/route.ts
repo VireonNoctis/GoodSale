@@ -44,12 +44,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Wallet service is not configured' }, { status: 503 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const reference = String(body.reference || '').trim();
-    if (!reference || reference.length > 128) {
-      return NextResponse.json({ success: false, error: 'Valid payment reference required' }, { status: 400 });
-    }
-
     const { data: intent } = await admin
       .from('wallet_funding_intents')
       .select('id,user_id,reference')
