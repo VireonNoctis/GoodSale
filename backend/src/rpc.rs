@@ -62,6 +62,7 @@ const USER_RPCS: &[&str] = &[
     "update_my_business_staff",
     "remove_my_business_staff",
     "get_my_business_staff_overview",
+    "bulk_update_my_inventory",
 ];
 const ADMIN_RPCS: &[&str] = &[
     "admin_auto_assign_delivery",
