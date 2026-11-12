@@ -31,6 +31,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const reference = String(body?.reference || '').trim();
+    if (!/^GSP_[0-9]+_[0-9]+_[A-Z0-9]{4,16}$/.test(reference)) {
+      return NextResponse.json({ success: false, error: 'Valid payment reference required' }, { status: 400 });
+    }
+
     const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
     if (rustBackend) {
       const { data: { session } } = await supabase.auth.getSession();
