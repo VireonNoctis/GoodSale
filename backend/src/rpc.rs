@@ -57,6 +57,11 @@ const USER_RPCS: &[&str] = &[
     "redeem_good_points",
     "set_my_account_suspended",
     "request_order_refund",
+    "list_my_business_staff",
+    "add_my_business_staff",
+    "update_my_business_staff",
+    "remove_my_business_staff",
+    "get_my_business_staff_overview",
 ];
 const ADMIN_RPCS: &[&str] = &[
     "admin_auto_assign_delivery",
