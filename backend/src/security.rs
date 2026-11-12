@@ -18,7 +18,9 @@ pub fn normalize_plain_text(input: &str, max_chars: usize) -> Result<String, Tex
             return Err(TextError("Text contains unsupported control characters."));
         }
         if (0x202A..=0x202E).contains(&code) || (0x2066..=0x2069).contains(&code) {
-            return Err(TextError("Text contains unsupported directional formatting."));
+            return Err(TextError(
+                "Text contains unsupported directional formatting.",
+            ));
         }
     }
     Ok(trimmed.to_owned())
@@ -34,7 +36,11 @@ pub fn validate_external_url(input: &str) -> Result<String, &'static str> {
         return Err("This URL is not allowed.");
     }
 
-    let host = parsed.host_str().unwrap_or_default().trim_end_matches('.').to_ascii_lowercase();
+    let host = parsed
+        .host_str()
+        .unwrap_or_default()
+        .trim_end_matches('.')
+        .to_ascii_lowercase();
     if host == "localhost" || host.ends_with(".localhost") || host.ends_with(".local") {
         return Err("Local network addresses are not allowed.");
     }
@@ -43,11 +49,17 @@ pub fn validate_external_url(input: &str) -> Result<String, &'static str> {
     if let Ok(ip) = host_for_ip.parse::<std::net::IpAddr>() {
         let blocked = match ip {
             std::net::IpAddr::V4(v4) => {
-                v4.is_private() || v4.is_loopback() || v4.is_link_local()
-                    || v4.is_unspecified() || v4.is_broadcast() || v4.is_multicast()
+                v4.is_private()
+                    || v4.is_loopback()
+                    || v4.is_link_local()
+                    || v4.is_unspecified()
+                    || v4.is_broadcast()
+                    || v4.is_multicast()
             }
             std::net::IpAddr::V6(v6) => {
-                v6.is_loopback() || v6.is_unspecified() || v6.is_multicast()
+                v6.is_loopback()
+                    || v6.is_unspecified()
+                    || v6.is_multicast()
                     || (v6.segments()[0] & 0xfe00) == 0xfc00
                     || (v6.segments()[0] & 0xffc0) == 0xfe80
             }

@@ -1,5 +1,9 @@
 use redis::aio::ConnectionManager;
-use std::{collections::HashMap, sync::{Arc, Mutex}, time::{Duration, Instant}};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Decision {
@@ -21,7 +25,9 @@ impl RateLimiter {
             let client = redis::Client::open(url).map_err(|e| format!("Invalid REDIS_URL: {e}"))?;
             match client.get_connection_manager().await {
                 Ok(connection) => Some(connection),
-                Err(error) if required => return Err(format!("Redis is required but unavailable: {error}")),
+                Err(error) if required => {
+                    return Err(format!("Redis is required but unavailable: {error}"))
+                }
                 Err(_) => None,
             }
         } else if required {
@@ -60,7 +66,11 @@ impl RateLimiter {
             return Ok(Decision {
                 allowed: count <= i64::from(limit),
                 remaining,
-                retry_after_secs: if count > i64::from(limit) { ttl.max(1) as u64 } else { 0 },
+                retry_after_secs: if count > i64::from(limit) {
+                    ttl.max(1) as u64
+                } else {
+                    0
+                },
             });
         }
 
@@ -76,7 +86,10 @@ impl RateLimiter {
         }
         entry.1 = entry.1.saturating_add(1);
         let count = entry.1;
-        let retry = window.saturating_sub(now.duration_since(entry.0)).as_secs().max(1);
+        let retry = window
+            .saturating_sub(now.duration_since(entry.0))
+            .as_secs()
+            .max(1);
 
         if buckets.len() > 20_000 {
             buckets.retain(|_, (start, _)| now.duration_since(*start) < window);
