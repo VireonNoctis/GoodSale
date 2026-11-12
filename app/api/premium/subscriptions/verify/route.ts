@@ -52,12 +52,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Premium service is not configured' }, { status: 503 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const reference = String(body.reference || '').trim();
-    if (!reference || reference.length > 128) {
-      return NextResponse.json({ success: false, error: 'Valid payment reference required' }, { status: 400 });
-    }
-
     const profileId = await profileIdForAuth(admin, user.id);
     if (!profileId) {
       return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
