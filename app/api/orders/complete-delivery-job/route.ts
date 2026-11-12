@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Valid jobId and PIN required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('complete_delivery_job_with_pin', {
+    const { data, error } = await callRustRpc(supabase, 'complete_delivery_job_with_pin', {
       p_job_id: jobId,
       p_pin: pin,
     });

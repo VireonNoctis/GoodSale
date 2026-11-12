@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -380,7 +381,7 @@ export async function POST(request: NextRequest) {
     // so the database — not the browser — decides what is allowed. Verified and
     // staff roles are untouched by the RPC's WHERE clause.
     if (body.complete) {
-      const { error: roleError } = await account.supabase.rpc('set_own_role', {
+      const { error: roleError } = await account.callRustRpc(supabase, 'set_own_role', {
         p_role: sellerType === 'BUSINESS' ? 'BUSINESS' : 'SELLER',
       });
       if (roleError) {

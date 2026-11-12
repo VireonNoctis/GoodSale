@@ -1,3 +1,4 @@
+import { callRustInternalRpc, callRustJob } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { processDeliveryOutbox } from '@/lib/notifications/delivery-outbox';
@@ -28,7 +29,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Server service role is not configured' }, { status: 503 });
     }
 
-    const { data, error } = await client.rpc('run_delivery_jobs');
+    const deliveryRun = await callRustJob('run_delivery_jobs', secret);
+    const data = deliveryRun.data;
+    const error = deliveryRun.error;
     if (error) {
       logger.error('Delivery jobs failed', { error: error.message });
       return NextResponse.json({ success: false, error: 'Delivery jobs failed' }, { status: 500 });
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
     // scheduler to be configured.
     let premiumJobs: unknown = null;
     try {
-      const premium = await client.rpc('run_premium_jobs');
+      const premium = await callRustJob('run_premium_jobs', process.env.PREMIUM_CRON_SECRET || secret);
       if (premium.error) logger.warn('Premium lifecycle jobs failed', { error: premium.error.message });
       else premiumJobs = premium.data;
     } catch (premiumError) {

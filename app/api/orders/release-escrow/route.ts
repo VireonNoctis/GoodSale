@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Valid orderId and PIN required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('release_escrow_with_pin', {
+    const { data, error } = await callRustRpc(supabase, 'release_escrow_with_pin', {
       p_order_id: orderId,
       p_pin: pin,
     });

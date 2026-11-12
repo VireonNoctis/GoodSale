@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid orderId or status' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('update_order_status', {
+    const { data, error } = await callRustRpc(supabase, 'update_order_status', {
       p_order_id: orderId,
       p_status: status,
     });

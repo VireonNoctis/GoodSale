@@ -1,3 +1,4 @@
+import { callRustInternalRpc, callRustJob } from '@/lib/server/rust-rpc';
 import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -82,7 +83,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Server database is not configured' }, { status: 503 });
     }
 
-    const { data, error } = await service.rpc('courier_apply_tracking_event', {
+    const { data, error } = await callRustInternalRpc('courier_apply_tracking_event', {
       p_provider: config.provider,
       p_event_id: eventId,
       p_tracking_number: trackingNumber,

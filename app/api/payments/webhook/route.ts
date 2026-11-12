@@ -1,3 +1,4 @@
+import { callRustInternalRpc, callRustJob } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (event.event === 'transfer.success') {
-        const { error } = await admin.rpc('admin_payout_complete', {
+        const { error } = await callRustInternalRpc('admin_payout_complete', {
           p_withdrawal_id: withdrawal.id,
           p_provider_reference: providerReference || transferCode,
         });
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
         event.event === 'transfer.reversed'
           ? 'Paystack reversed the transfer'
           : String(event.data?.reason || event.data?.gateway_response || 'Paystack transfer failed');
-      const { error } = await admin.rpc('admin_payout_fail', {
+      const { error } = await callRustInternalRpc('admin_payout_fail', {
         p_withdrawal_id: withdrawal.id,
         p_reason: reason,
       });

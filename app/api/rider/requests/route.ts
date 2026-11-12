@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -16,7 +17,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await supabase.rpc('rider_available_deliveries');
+    const { data, error } = await callRustRpc(supabase, 'rider_available_deliveries');
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }

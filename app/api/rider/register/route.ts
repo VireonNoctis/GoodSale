@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
         : [],
     };
 
-    const { data, error } = await supabase.rpc('rider_apply', { p_payload: payload });
+    const { data, error } = await callRustRpc(supabase, 'rider_apply', { p_payload: payload });
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }

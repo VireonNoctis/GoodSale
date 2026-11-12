@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Valid orderId and action required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('admin_force_escrow', {
+    const { data, error } = await callRustAdminRpc(supabase, 'admin_force_escrow', {
       p_order_id: orderId,
       p_action: action,
       p_notes: notes,
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
             reason: notes || 'Admin refund',
           });
           if (providerRefund?.success && refundId) {
-            await admin.rpc('mark_refund_completed', {
+            await callRustAdminRpc(supabase, 'mark_refund_completed', {
               p_refund_id: refundId,
               p_provider_reference:
                 (providerRefund as { data?: { transaction_reference?: string } }).data?.transaction_reference ||

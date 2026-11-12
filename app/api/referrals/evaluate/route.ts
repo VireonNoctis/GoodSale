@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
@@ -16,7 +17,7 @@ export async function POST() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await supabase.rpc('evaluate_my_referral');
+    const { data, error } = await callRustRpc(supabase, 'evaluate_my_referral');
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }

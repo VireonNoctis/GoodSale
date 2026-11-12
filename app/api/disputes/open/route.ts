@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase.rpc('open_dispute', {
+    const { data, error } = await callRustRpc(supabase, 'open_dispute', {
       p_order_id: orderId,
       p_reason: reason,
     });

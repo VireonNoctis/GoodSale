@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid instructions payload' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('delivery_set_instructions', {
+    const { data, error } = await callRustRpc(supabase, 'delivery_set_instructions', {
       p_delivery_id: deliveryId,
       p_instructions: instructions.slice(0, 1000),
     });

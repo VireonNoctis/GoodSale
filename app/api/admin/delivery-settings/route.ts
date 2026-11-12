@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No valid settings supplied' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('admin_set_delivery_settings', {
+    const { data, error } = await callRustAdminRpc(supabase, 'admin_set_delivery_settings', {
       p_payload: payload,
     });
     if (error) {

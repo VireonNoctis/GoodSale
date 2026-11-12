@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase.rpc('request_withdrawal', {
+    const { data, error } = await callRustRpc(supabase, 'request_withdrawal', {
       p_amount: amount,
       p_bank_name: bankName,
       p_account_name: accountName,

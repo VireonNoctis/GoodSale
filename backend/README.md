@@ -92,3 +92,10 @@ Each cutover needs Rust unit/integration tests, Supabase RPC permission checks, 
 ## CI checks
 
 The fork's Rust workflow formats Rust sources on pushes to `premium-marketplace-rework`, commits formatter-only changes, then runs Clippy with warnings denied, unit tests and a release build. Pull-request runs check formatting without modifying the branch. The repository's main CI separately runs Next.js lint, typecheck, tests and build.
+
+
+## Rust RPC boundary
+
+Authenticated database RPCs are routed through `/v1/rpc/:name` with the original Supabase user JWT, preserving RLS and database function authorization. Admin RPCs use `/v1/admin/rpc/:name`; the Rust API independently resolves the auth user and checks the profile role before using the service-role connection. Only explicit allowlists are accepted.
+
+The public RPC surface is limited to public seller-verification and shipment-tracking summaries. Internal service RPCs (webhook event application and referral attribution) require the private `RUST_INTERNAL_SECRET`. Scheduled jobs use the separate delivery/premium cron secrets. Never expose any of these keys to client-side code.

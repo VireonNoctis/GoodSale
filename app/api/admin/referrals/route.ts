@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -74,7 +75,7 @@ export async function GET(req: NextRequest) {
 
     const [campaignRows, analyticsResult, clicks, audit] = await Promise.all([
       admin.from('referral_campaigns').select('*').order('created_at', { ascending: false }),
-      supabase.rpc('admin_referral_analytics'),
+      callRustAdminRpc(supabase, 'admin_referral_analytics'),
       admin
         .from('referral_clicks')
         .select('id,code,campaign_id,created_at')
@@ -389,7 +390,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      const { data, error } = await supabase.rpc('admin_disqualify_referral', {
+      const { data, error } = await callRustAdminRpc(supabase, 'admin_disqualify_referral', {
         p_referral_id: referralId,
         p_reason: reason,
       });
@@ -402,7 +403,7 @@ export async function POST(req: NextRequest) {
       if (!referralId) {
         return NextResponse.json({ success: false, error: 'Referral is required' }, { status: 400 });
       }
-      const { data, error } = await supabase.rpc('admin_mark_referral_reviewed', {
+      const { data, error } = await callRustAdminRpc(supabase, 'admin_mark_referral_reviewed', {
         p_referral_id: referralId,
         p_notes: String(body.notes || '').slice(0, 500),
       });
@@ -415,7 +416,7 @@ export async function POST(req: NextRequest) {
       if (!referralId) {
         return NextResponse.json({ success: false, error: 'Referral is required' }, { status: 400 });
       }
-      const { data, error } = await admin.rpc('referral_evaluate', {
+      const { data, error } = await callRustAdminRpc(supabase, 'referral_evaluate', {
         p_referral_id: referralId,
       });
       if (error) throw error;

@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (auto) {
-      const { data, error } = await supabase.rpc('admin_auto_assign_delivery', {
+      const { data, error } = await callRustRpc(supabase, 'admin_auto_assign_delivery', {
         p_delivery_id: deliveryId,
       });
       if (error) {
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     // Admin rights are enforced inside the RPCs.
     if (riderId) {
-      const { data, error } = await supabase.rpc('delivery_assign_rider', {
+      const { data, error } = await callRustRpc(supabase, 'delivery_assign_rider', {
         p_delivery_id: deliveryId,
         p_rider_id: riderId,
       });
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase.rpc('delivery_set_courier', {
+    const { data, error } = await callRustRpc(supabase, 'delivery_set_courier', {
       p_delivery_id: deliveryId,
       p_courier_name: courierName,
       p_tracking_number: body?.trackingNumber ? String(body.trackingNumber).trim().slice(0, 80) : '',

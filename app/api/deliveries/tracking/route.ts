@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -73,7 +74,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'A valid delivery is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('delivery_tracking_view', {
+    const { data, error } = await callRustRpc(supabase, 'delivery_tracking_view', {
       p_delivery_id: deliveryId,
     });
     if (error) {
@@ -93,7 +94,7 @@ export async function GET(req: NextRequest) {
     ) {
       const route = await resolveRoute(raw.pickup, raw.destination);
       if (route) {
-        const { error: routeError } = await supabase.rpc('delivery_set_route', {
+        const { error: routeError } = await callRustRpc(supabase, 'delivery_set_route', {
           p_delivery_id: deliveryId,
           p_distance_km: route.distanceKm,
           p_duration_minutes: route.durationMinutes,

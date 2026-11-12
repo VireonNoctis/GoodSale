@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Valid disputeId and resolution required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('resolve_dispute', {
+    const { data, error } = await callRustAdminRpc(supabase, 'resolve_dispute', {
       p_dispute_id: disputeId,
       p_resolution: resolution,
       p_admin_notes: notes,

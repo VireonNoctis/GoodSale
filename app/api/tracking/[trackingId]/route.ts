@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
@@ -43,7 +44,7 @@ export async function GET(
     // The RPC is security-definer and decides redaction based on the caller's
     // session. Anonymous callers receive progress only — never addresses,
     // phone numbers, participant names or rider coordinates.
-    const { data, error } = await supabase.rpc('shipment_tracking_lookup', { p_query: query });
+    const { data, error } = await callRustRpc(supabase, 'shipment_tracking_lookup', { p_query: query });
     if (error) {
       logger.warn('shipment_tracking_lookup failed', { error: error.message });
       return NextResponse.json({ success: false, error: 'Tracking lookup failed.' }, { status: 400 });

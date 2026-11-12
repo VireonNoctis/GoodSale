@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -301,7 +302,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'A reason is required for this action.' }, { status: 400 });
     }
 
-    const { data, error } = await ctx.supabase.rpc('admin_verification_action', {
+    const { data, error } = await ctx.callRustAdminRpc(supabase, 'admin_verification_action', {
       p_application_id: applicationId,
       p_action: action,
       p_reason: reason,

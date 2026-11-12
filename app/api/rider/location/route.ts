@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       if (!['GRANTED', 'DENIED', 'UNKNOWN'].includes(permission)) {
         return NextResponse.json({ success: false, error: 'Invalid location permission' }, { status: 400 });
       }
-      const { data, error } = await supabase.rpc('rider_set_location_sharing', {
+      const { data, error } = await callRustRpc(supabase, 'rider_set_location_sharing', {
         p_share: body?.sharing === true,
         p_permission: permission,
       });
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
         const parsed = Number(value);
         return Number.isFinite(parsed) ? parsed : null;
       };
-      const { data, error } = await supabase.rpc('rider_update_location', {
+      const { data, error } = await callRustRpc(supabase, 'rider_update_location', {
         p_delivery_id: deliveryId,
         p_lat: lat,
         p_lng: lng,

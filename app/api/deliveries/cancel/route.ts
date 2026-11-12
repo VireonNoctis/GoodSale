@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase.rpc(
+    const { data, error } = await callRustRpc(supabase, 
       action === 'RETURN' ? 'delivery_initiate_return' : 'delivery_cancel',
       { p_delivery_id: deliveryId, p_reason: reason.slice(0, 500) }
     );

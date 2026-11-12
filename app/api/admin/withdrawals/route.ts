@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!approve) {
-      const { data, error } = await supabase.rpc('admin_payout_fail', {
+      const { data, error } = await callRustAdminRpc(supabase, 'admin_payout_fail', {
         p_withdrawal_id: withdrawalId,
         p_reason: notes || 'Rejected by admin',
       });
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Claim the request before moving money. A second concurrent approval loses.
-    const { error: beginError } = await supabase.rpc('admin_payout_begin', {
+    const { error: beginError } = await callRustAdminRpc(supabase, 'admin_payout_begin', {
       p_withdrawal_id: withdrawalId,
     });
     if (beginError) {
@@ -155,14 +156,14 @@ export async function POST(req: NextRequest) {
 
     // Persist the reference BEFORE calling Paystack so a fast signed webhook
     // can still find the request and settle it. This does not mark it paid.
-    const { error: referenceError } = await supabase.rpc('admin_payout_processing', {
+    const { error: referenceError } = await callRustAdminRpc(supabase, 'admin_payout_processing', {
       p_withdrawal_id: withdrawalId,
       p_transfer_code: null,
       p_provider_reference: transferReference,
       p_notes: notes,
     });
     if (referenceError) {
-      await supabase.rpc('admin_payout_fail', {
+      await callRustAdminRpc(supabase, 'admin_payout_fail', {
         p_withdrawal_id: withdrawalId,
         p_reason: 'Could not store the payout reference before transfer',
       });
@@ -180,7 +181,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!transfer.ok) {
-      const { error: failError } = await supabase.rpc('admin_payout_fail', {
+      const { error: failError } = await callRustAdminRpc(supabase, 'admin_payout_fail', {
         p_withdrawal_id: withdrawalId,
         p_reason: transfer.error || 'Paystack transfer could not be started',
       });
@@ -199,7 +200,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { error: processingError } = await supabase.rpc('admin_payout_processing', {
+    const { error: processingError } = await callRustAdminRpc(supabase, 'admin_payout_processing', {
       p_withdrawal_id: withdrawalId,
       p_transfer_code: transfer.transferCode || null,
       p_provider_reference: transfer.reference || null,

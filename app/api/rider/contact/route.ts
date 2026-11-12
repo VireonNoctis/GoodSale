@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'A delivery is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('rider_contact_seller', {
+    const { data, error } = await callRustRpc(supabase, 'rider_contact_seller', {
       p_delivery_id: deliveryId,
     });
     if (error) {

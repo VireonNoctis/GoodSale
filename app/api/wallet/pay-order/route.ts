@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Valid order is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('pay_order_with_wallet', {
+    const { data, error } = await callRustRpc(supabase, 'pay_order_with_wallet', {
       p_order_id: orderId,
     });
 

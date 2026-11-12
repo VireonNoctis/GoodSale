@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -23,7 +24,7 @@ async function requireAdmin() {
   if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(String(profile.role))) {
     return { error: 'Admin only', status: 403 as const };
   }
-  return { admin, profile };
+  return { admin, profile, supabase };
 }
 
 /** POST /api/admin/ads — approve or reject a pending sponsored campaign. */
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Choose approve or reject' }, { status: 400 });
     }
 
-    const { data, error } = await ctx.admin.rpc('admin_review_sponsored_campaign', {
+    const { data, error } = await callRustAdminRpc(ctx.supabase, 'admin_review_sponsored_campaign', {
       p_ad_id: campaignId,
       p_admin_id: ctx.profile.id,
       p_action: action,

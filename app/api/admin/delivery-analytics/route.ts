@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Dates must use YYYY-MM-DD' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('admin_delivery_analytics', {
+    const { data, error } = await callRustAdminRpc(supabase, 'admin_delivery_analytics', {
       p_from: from || null,
       p_to: to || null,
     });

@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
@@ -24,7 +25,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ success: false, error: 'Supabase not configured' }, { status: 503 });
     }
 
-    const { data, error } = await supabase.rpc('seller_public_verification', {
+    const { data, error } = await callRustRpc(supabase, 'seller_public_verification', {
       p_seller_id: sellerId,
     });
 

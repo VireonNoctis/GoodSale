@@ -1,3 +1,4 @@
+import { callRustAdminRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -22,7 +23,7 @@ async function requireAdmin() {
   if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(String(profile.role))) {
     return { error: 'Admin only', status: 403 as const };
   }
-  return { admin, profile };
+  return { admin, profile, supabase };
 }
 
 /** GET /api/admin/premium — plan copy, pending Flash Sales, payments, credits and audit. */
@@ -179,7 +180,7 @@ export async function POST(req: NextRequest) {
       if (!Number.isInteger(promotionId) || promotionId <= 0 || !['APPROVE', 'REJECT'].includes(decision)) {
         return NextResponse.json({ success: false, error: 'Valid Flash Sale decision required' }, { status: 400 });
       }
-      const { data, error } = await ctx.admin.rpc('admin_review_flash_sale', {
+      const { data, error } = await callRustAdminRpc(ctx.supabase, 'admin_review_flash_sale', {
         p_promotion_id: promotionId,
         p_admin_id: ctx.profile.id,
         p_action: decision,
@@ -237,7 +238,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: 'Add a reason for the credit grant' }, { status: 400 });
       }
       const reference = `ADMIN_CREDIT:${userId}:${Date.now()}`;
-      const { data, error } = await ctx.admin.rpc('issue_premium_credits', {
+      const { data, error } = await callRustAdminRpc(ctx.supabase, 'issue_premium_credits', {
         p_user_id: userId,
         p_amount: Math.round(amount),
         p_source: 'ADMIN',
@@ -256,7 +257,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'RUN_JOBS') {
-      const { data, error } = await ctx.admin.rpc('run_premium_jobs');
+      const { data, error } = await callRustAdminRpc(ctx.supabase, 'run_premium_jobs');
       if (error) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
       return NextResponse.json({ success: true, jobs: data });
     }

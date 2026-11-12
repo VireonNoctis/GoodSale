@@ -1,3 +1,4 @@
+import { callRustInternalRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { clientIpFromRequest, rateLimitAsync } from '@/lib/rate-limit';
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
 
         if (profile?.id) {
-          const { data: attributed, error: referralError } = await admin.rpc(
+          const { data: attributed, error: referralError } = await callRustInternalRpc(
             'attribute_referral',
             {
               p_referee_id: profile.id,

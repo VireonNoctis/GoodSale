@@ -1,3 +1,4 @@
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logger, publicErrorMessage } from '@/lib/logger';
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid coordinates' }, { status: 400 });
     }
 
-    const { data, error } = await supabase.rpc('rider_update_availability', {
+    const { data, error } = await callRustRpc(supabase, 'rider_update_availability', {
       p_online: body.online,
       p_lat: lat,
       p_lng: lng,

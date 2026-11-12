@@ -156,3 +156,6 @@ The Rust CI workflow runs formatting, Clippy, unit tests and a release build. A 
 
 
 The Next.js middleware also checks the `Origin` header on browser-originated API writes against `NEXT_PUBLIC_APP_URL` and `APP_ALLOWED_ORIGINS`. Provider webhook paths are exempt from browser-origin checks and must rely on their provider signature verification instead. Keep the allowlist exact and include every legitimate production frontend origin.
+
+
+Set a long random `RUST_INTERNAL_SECRET` for trusted Next.js-to-Rust server calls. It protects webhook settlement, courier tracking-event application and server-side referral attribution. It must be set on both the Next.js and Rust containers and must never use a `NEXT_PUBLIC_` prefix. The Rust API exposes only allowlisted database functions; user RPCs retain the caller's Supabase token and admin RPCs are role-checked again inside Rust.
