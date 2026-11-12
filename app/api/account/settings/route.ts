@@ -62,6 +62,17 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
+    if (rustBackend) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      const upstream = await fetch(`${rustBackend}/v1/account/settings`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: 'no-store',
+      });
+      const payload = await upstream.json().catch(() => ({ success: false, error: 'Account settings service returned an invalid response' }));
+      return NextResponse.json(payload, { status: upstream.status });
+    }
     const settings = (user.user_metadata?.[SETTINGS_KEY] ?? {}) as Record<string, unknown>;
     return NextResponse.json({ success: true, settings });
   } catch (error) {
@@ -91,6 +102,19 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
     }
 
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
+    if (rustBackend) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      const upstream = await fetch(`${rustBackend}/v1/account/settings`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        cache: 'no-store',
+      });
+      const payload = await upstream.json().catch(() => ({ success: false, error: 'Account settings service returned an invalid response' }));
+      return NextResponse.json(payload, { status: upstream.status });
+    }
     const patch = pickAllowed(body);
     const current = (user.user_metadata?.[SETTINGS_KEY] ?? {}) as Record<string, unknown>;
     const merged = { ...current, ...patch };
