@@ -118,3 +118,41 @@ npm run build && npm start
 ```
 
 Smoke test: sign up → list with photos → buy with Paystack → ship → buyer PIN release → seller withdraw → admin approve Transfer.
+
+
+## Rust API, distributed limits and safe input handling
+
+The Rust service is built from `backend/` and runs alongside Next.js. Docker Compose starts the Rust API and a private Redis 7 service; Redis persistence uses the Compose volume `redis-data`.
+
+**Required deployment settings**
+- `REDIS_URL`: private Redis connection string for the Rust service.
+- `RATE_LIMIT_REQUIRE_REDIS=true`: production must not silently fall back to per-process memory.
+- `RATE_LIMIT_SHARED_SECRET`: long random secret shared only by the Next.js server and Rust service. It authenticates Next.js calls to the Rust-backed distributed rate-limit endpoint.
+- `RUST_BACKEND_URL`: internal URL from Next.js to Rust, for example `http://backend:8080` in Compose.
+- Supabase URL, anon key and service-role key, plus `PAYSTACK_SECRET_KEY` for order verification.
+- Cloudinary credentials are optional. Government-ID files always stay in the private Supabase bucket.
+
+If deploying outside Compose, expose the Rust service only to the Next.js server/private network. Do not publish port 8080 or expose the service-role key, Paystack secret, Cloudinary secret or shared rate-limit secret to the browser.
+
+The Next.js API middleware uses Rust/Redis when both `RUST_BACKEND_URL` and `RATE_LIMIT_SHARED_SECRET` are configured. Upstash REST can be used instead by setting both `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. In production, API requests fail closed with 503 if neither distributed limiter is configured or the configured limiter is unavailable. Do not launch with these settings missing.
+
+### What is routed through Rust now
+
+- `POST /api/upload` → Rust `POST /v1/uploads`: authenticated session verification, account/IP limits, bucket-specific MIME policies, file-signature checks, size limits, generated object names, private identity-document storage and server-side Cloudinary signing.
+- `POST /api/payments/verify` → Rust `POST /v1/payments/verify`: server-to-server Paystack verification, NGN/reference/amount checks, partial-payment reconciliation and the existing idempotent `mark_order_paid_by_reference` RPC.
+- All Next.js `/api/*` paths receive a distributed middleware rate-limit check and request-size guard.
+- `POST /api/security/inspect-text` and `POST /api/security/validate-url` expose Rust validation for untrusted plain text and links.
+
+**Not yet migrated:** the remaining account/auth, listing, wallet, premium subscription, Paystack webhook, withdrawal, refund, escrow, dispute, delivery, courier, chat, notification, referral and admin route handlers still run in Next.js. Keep them there until Rust replacements pass contract, authorization, replay/idempotency and financial-flow tests. Do not treat this incremental rollout as a complete Rust backend migration.
+
+### Input and upload safety boundaries
+
+- User text is Unicode-normalised and control/bidirectional override characters are rejected by the Rust inspection endpoint. This is not an HTML sanitizer. Render untrusted text as normal React text; never inject it through `dangerouslySetInnerHTML`.
+- Displayed links can be checked for allowed HTTP(S) schemes and obvious local/private literal hosts. The validator does not fetch URLs and is not a substitute for DNS/redirect validation in any future server-side URL-fetch feature.
+- Uploads require authentication; MIME allowlists and file signatures must both match. SVG and executable uploads are not accepted. Signature checks are not antivirus scanning; keep private buckets private and consider asynchronous malware scanning before permitting document downloads.
+- Rate limits supplement, not replace, authentication, Supabase RLS, RPC authorization, CSRF/origin protections, payment signature checks or fraud review.
+
+The Rust CI workflow runs formatting, Clippy, unit tests and a release build. A successful workflow and deployed smoke tests are required before removing any remaining TypeScript route.
+
+
+The Next.js middleware also checks the `Origin` header on browser-originated API writes against `NEXT_PUBLIC_APP_URL` and `APP_ALLOWED_ORIGINS`. Provider webhook paths are exempt from browser-origin checks and must rely on their provider signature verification instead. Keep the allowlist exact and include every legitimate production frontend origin.

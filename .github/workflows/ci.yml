@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'cursor/**']
+    branches: [main, 'cursor/**', 'premium-marketplace-rework']
   pull_request:
     branches: [main]
 

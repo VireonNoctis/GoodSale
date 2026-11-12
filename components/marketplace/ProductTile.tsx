@@ -14,6 +14,7 @@ import type { Product } from '@/lib/types';
 import { activeFlashSale } from '@/lib/productPricing';
 import { trackProductMetric } from '@/lib/productMetrics';
 import { SmartImage } from '../ui/SmartImage';
+import IconButton from '@/components/ui/IconButton';
 
 export type ProductTileBadge = 'featured' | 'trending' | 'flash' | 'new' | null;
 
@@ -121,18 +122,18 @@ export default function ProductTile({
           )}
         </div>
 
-        <button
-          type="button"
+        <IconButton
+          icon={Heart}
+          size="sm"
+          label={isFavorite ? `Remove ${product.title} from wishlist` : `Save ${product.title} to wishlist`}
+          aria-pressed={isFavorite}
           onClick={(event) => {
             event.stopPropagation();
             onToggleFavorite();
           }}
-          aria-label={isFavorite ? `Remove ${product.title} from wishlist` : `Save ${product.title} to wishlist`}
-          aria-pressed={isFavorite}
-          className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-ink-500 shadow-sm backdrop-blur transition-colors hover:text-jade-600 dark:bg-ink-950/80 dark:text-ink-300 dark:hover:text-jade-300 focus-ring"
-        >
-          <Heart className={`h-3.5 w-3.5 ${isFavorite ? 'fill-jade-500 text-jade-500 dark:fill-jade-400 dark:text-jade-400' : ''}`} />
-        </button>
+          iconClassName={isFavorite ? 'fill-jade-500 text-jade-500 dark:fill-jade-400 dark:text-jade-400' : ''}
+          className="absolute right-1.5 top-1.5 !rounded-full !border-transparent !bg-white/90 !text-ink-500 shadow-sm backdrop-blur hover:!text-jade-600 dark:!bg-ink-950/80 dark:!text-ink-300 dark:hover:!text-jade-300"
+        />
 
         {lowStock && !discount && (
           <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-ink-900/85 px-1.5 py-0.5 text-[9px] font-bold text-white">
@@ -209,18 +210,18 @@ export default function ProductTile({
               </span>
             )}
           </span>
-          <button
-            type="button"
+          <IconButton
+            icon={flashSale ? Zap : ShoppingCart}
+            size="sm"
+            tone="primary"
+            label={`Add ${product.title} to cart`}
+            disabled={soldOut}
             onClick={(event) => {
               event.stopPropagation();
               onAdd();
             }}
-            disabled={soldOut}
-            aria-label={`Add ${product.title} to cart`}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-jade-500/10 text-jade-700 transition-colors hover:bg-jade-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:text-jade-300 focus-ring"
-          >
-            {flashSale ? <Zap className="h-3.5 w-3.5" /> : <ShoppingCart className="h-3.5 w-3.5" />}
-          </button>
+            className="shrink-0 !rounded-xl"
+          />
         </div>
       </div>
     </article>

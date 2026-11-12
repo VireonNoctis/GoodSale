@@ -202,3 +202,17 @@ Pass the same env vars into the compose service.
 ## Need help wiring credentials?
 
 Add the Supabase + Paystack values to Cursor / Vercel / Docker secrets (or `.env.local`) and re-run. Without them the UI stays empty and the amber setup banner explains what is missing.
+
+
+## Rust API and security services
+
+The Rust API is being introduced as the backend migration target. Run it locally with `npm run backend:dev`, or use Docker Compose to start the Next.js app, Rust API and Redis together.
+
+```bash
+npm run backend:test
+npm run backend:check
+```
+
+Before running Compose, set a strong random `RATE_LIMIT_SHARED_SECRET` in `.env.local`. The Next.js middleware uses that secret to ask the Rust service for shared Redis-backed rate-limit decisions. Redis is internal to the Compose network and is not published to the host.
+
+**Migration status:** media uploads and Paystack order verification are routed to Rust when `RUST_BACKEND_URL` is configured. The rest of the current Next.js API handlers remain in place while their Supabase, checkout, escrow, payout, webhook, delivery and admin contracts are migrated and tested. This is deliberate: financial handlers must retain their idempotency, role checks and exact database RPC semantics.

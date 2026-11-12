@@ -11,6 +11,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  loadingText?: React.ReactNode;
 }
 
 const variants: Record<ButtonVariant, string> = {
@@ -36,6 +37,7 @@ export default function Button({
   variant = 'primary',
   size = 'md',
   loading = false,
+  loadingText,
   disabled,
   className = '',
   children,
@@ -44,14 +46,14 @@ export default function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex select-none items-center justify-center font-bold tracking-tight transition-all duration-200 ease-glide press-scale focus-ring disabled:pointer-events-auto disabled:opacity-50 cursor-pointer ${variants[variant]} ${variant === 'primary' ? 'gs-tactile' : ''} ${sizes[size]} ${className}`}
+      aria-busy={loading}
+      data-loading={loading ? 'true' : undefined}
+      className={`inline-flex select-none items-center justify-center font-bold tracking-tight transition-all duration-200 ease-glide press-scale focus-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer ${variants[variant]} ${variant === 'primary' ? 'gs-tactile' : ''} ${sizes[size]} ${className}`}
       {...rest}
     >
       {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-      ) : (
-        children
-      )}
+        <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /><span>{loadingText ?? children}</span></>
+      ) : children}
     </button>
   );
 }

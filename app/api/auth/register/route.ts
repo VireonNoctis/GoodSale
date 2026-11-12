@@ -26,6 +26,9 @@ export async function POST(req: NextRequest) {
   try {
     // Account creation is the most abused endpoint on any marketplace.
     const limited = await rateLimitAsync(`register:${clientIpFromRequest(req)}`, 6, 10 * 60_000);
+    if (limited.unavailable) {
+      return NextResponse.json({ success: false, error: 'Sign-up protection is temporarily unavailable.' }, { status: 503 });
+    }
     if (!limited.allowed) {
       return NextResponse.json(
         {

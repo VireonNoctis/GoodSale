@@ -143,6 +143,45 @@ async function uploadToCloudinary(
  */
 export async function POST(req: NextRequest) {
   try {
+    // Rust owns upload validation/storage when the backend is deployed. Keep the
+    // established handler below as a rollout fallback until Rust is enabled in
+    // every environment.
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
+    if (rustBackend) {
+      const sessionClient = await createServerSupabaseClient();
+      if (!sessionClient) {
+        return NextResponse.json({ success: false, error: 'Authentication is not configured' }, { status: 503 });
+      }
+      const { data: { session } } = await sessionClient.auth.getSession();
+      if (!session?.access_token) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+      const contentType = req.headers.get('content-type');
+      if (!contentType?.toLowerCase().startsWith('multipart/form-data')) {
+        return NextResponse.json({ success: false, error: 'A multipart file upload is required' }, { status: 415 });
+      }
+      const payload = await req.arrayBuffer();
+      if (payload.byteLength > 27 * 1024 * 1024) {
+        return NextResponse.json({ success: false, error: 'This file is larger than the allowed limit' }, { status: 413 });
+      }
+      const upstream = await fetch(`${rustBackend}/v1/uploads`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': contentType,
+          'x-real-ip': clientIpFromRequest(req),
+        },
+        body: payload,
+        cache: 'no-store',
+      });
+      const responseBody = await upstream.json().catch(() => ({ success: false, error: 'Upload service returned an invalid response' }));
+      const responseHeaders = new Headers();
+      const retryAfter = upstream.headers.get('retry-after');
+      const requestId = upstream.headers.get('x-request-id');
+      if (retryAfter) responseHeaders.set('Retry-After', retryAfter);
+      if (requestId) responseHeaders.set('X-Request-Id', requestId);
+      return NextResponse.json(responseBody, { status: upstream.status, headers: responseHeaders });
+    }
     const ip = clientIpFromRequest(req);
     const limited = rateLimit(`upload:media:${ip}`, 30, 60_000);
     if (!limited.allowed) {

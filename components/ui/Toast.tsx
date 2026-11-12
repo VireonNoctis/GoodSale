@@ -28,8 +28,8 @@ export default function Toast({
 }: ToastProps) {
   return (
     <div
-      role="status"
-      aria-live="polite"
+      role={kind === 'error' ? 'alert' : 'status'}
+      aria-live={kind === 'error' ? 'assertive' : 'polite'}
       className={`pointer-events-auto inline-flex max-w-xs items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl animate-slide-in bg-ink-900 text-ink-50 border-ink-800 dark:bg-white dark:text-ink-950 dark:border-ink-200 ${className}`}
     >
       <span className="lottie-host h-7 w-7 shrink-0">

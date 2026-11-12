@@ -3,6 +3,8 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { organizationLd, websiteLd } from '@/lib/seo/structured';
+import NetworkStatus from '@/components/ui/NetworkStatus';
+import FeedbackHost from '@/components/ui/FeedbackHost';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -83,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>{children}<NetworkStatus /><FeedbackHost /></body>
     </html>
   );
 }

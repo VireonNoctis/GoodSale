@@ -33,7 +33,7 @@ export default function FeedbackHost() {
             key={t.id}
             type="button"
             onClick={() => dismissToast(t.id)}
-            className="cursor-pointer text-left focus-ring rounded-2xl"
+            className="pointer-events-auto cursor-pointer text-left focus-ring rounded-2xl"
             aria-label="Dismiss notification"
           >
             <Toast kind={t.kind} title={t.title}>
