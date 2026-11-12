@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { callRustRpc } from '@/lib/server/rust-rpc';
 import { logger } from '@/lib/logger';
 
 type AddressInput = {
@@ -77,13 +78,11 @@ export async function GET() {
   try {
     const auth = await requireProfile();
     if ('error' in auth) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
-    const { data, error } = await auth.supabase
-      .from('buyer_addresses')
-      .select('*')
-      .eq('profile_id', auth.profileId)
-      .order('is_default', { ascending: false })
-      .order('updated_at', { ascending: false });
-    if (error) throw error;
+    const { data, error } = await callRustRpc<Record<string, unknown>[]>(
+      auth.supabase,
+      'list_my_buyer_addresses',
+    );
+    if (error) return NextResponse.json({ success: false, error: error.message }, { status: Number(error.code) || 503 });
     return NextResponse.json({ success: true, addresses: (data || []).map(rowToAddress) });
   } catch (error) {
     logger.error('Saved addresses load failed', { error: String(error) });
@@ -104,11 +103,14 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (payload.is_default) {
-      await auth.supabase.from('buyer_addresses').update({ is_default: false }).eq('profile_id', auth.profileId);
+    const { data, error } = await callRustRpc<Record<string, unknown>>(
+      auth.supabase,
+      'save_my_buyer_address',
+      { p_payload: payload, p_address_id: null },
+    );
+    if (error || !data) {
+      return NextResponse.json({ success: false, error: error?.message || 'Could not save this address.' }, { status: Number(error?.code) || 400 });
     }
-    const { data, error } = await auth.supabase.from('buyer_addresses').insert(payload).select('*').single();
-    if (error) throw error;
     return NextResponse.json({ success: true, address: rowToAddress(data) }, { status: 201 });
   } catch (error) {
     logger.error('Saved address create failed', { error: String(error) });
@@ -130,17 +132,14 @@ export async function PUT(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (payload.is_default) {
-      await auth.supabase.from('buyer_addresses').update({ is_default: false }).eq('profile_id', auth.profileId);
+    const { data, error } = await callRustRpc<Record<string, unknown>>(
+      auth.supabase,
+      'save_my_buyer_address',
+      { p_payload: payload, p_address_id: id },
+    );
+    if (error || !data) {
+      return NextResponse.json({ success: false, error: error?.message || 'Could not update this address.' }, { status: Number(error?.code) || 400 });
     }
-    const { data, error } = await auth.supabase
-      .from('buyer_addresses')
-      .update(payload)
-      .eq('id', id)
-      .eq('profile_id', auth.profileId)
-      .select('*')
-      .single();
-    if (error) throw error;
     return NextResponse.json({ success: true, address: rowToAddress(data) });
   } catch (error) {
     logger.error('Saved address update failed', { error: String(error) });
@@ -154,12 +153,14 @@ export async function DELETE(req: NextRequest) {
     if ('error' in auth) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
     const id = Number(new URL(req.url).searchParams.get('id'));
     if (!id) return NextResponse.json({ success: false, error: 'Address id is required.' }, { status: 400 });
-    const { error } = await auth.supabase
-      .from('buyer_addresses')
-      .delete()
-      .eq('id', id)
-      .eq('profile_id', auth.profileId);
-    if (error) throw error;
+    const { error } = await callRustRpc(
+      auth.supabase,
+      'delete_my_buyer_address',
+      { p_address_id: id },
+    );
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: Number(error.code) || 404 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('Saved address delete failed', { error: String(error) });
