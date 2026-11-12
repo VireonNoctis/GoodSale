@@ -23,6 +23,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
+    if (rustBackend) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+      const upstream = await fetch(`${rustBackend}/v1/wallet/fund/verify`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference }),
+        cache: 'no-store',
+      });
+      const payload = await upstream.json().catch(() => ({ success: false, error: 'Wallet service returned an invalid response' }));
+      return NextResponse.json(payload, { status: upstream.status });
+    }
+
     const admin = createAdminClient();
     if (!admin) {
       return NextResponse.json({ success: false, error: 'Wallet service is not configured' }, { status: 503 });
