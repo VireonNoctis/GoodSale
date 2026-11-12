@@ -1,7 +1,7 @@
 mod config;
 mod payments;
-mod rpc;
 mod rate_limit;
+mod rpc;
 mod security;
 mod uploads;
 
@@ -349,11 +349,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/v1/payments/verify",
             post(payments::verify).layer(DefaultBodyLimit::max(32 * 1024)),
         )
-        .route("/v1/rpc/:name", post(rpc::user_rpc).layer(DefaultBodyLimit::max(256 * 1024)))
-        .route("/v1/admin/rpc/:name", post(rpc::admin_rpc).layer(DefaultBodyLimit::max(256 * 1024)))
-        .route("/v1/public/rpc/:name", post(rpc::public_rpc).layer(DefaultBodyLimit::max(16 * 1024)))
-        .route("/v1/internal/rpc/:name", post(rpc::internal_rpc).layer(DefaultBodyLimit::max(256 * 1024)))
-        .route("/v1/internal/jobs/:name", post(rpc::internal_job).layer(DefaultBodyLimit::max(16 * 1024)))
+        .route(
+            "/v1/rpc/:name",
+            post(rpc::user_rpc).layer(DefaultBodyLimit::max(256 * 1024)),
+        )
+        .route(
+            "/v1/admin/rpc/:name",
+            post(rpc::admin_rpc).layer(DefaultBodyLimit::max(256 * 1024)),
+        )
+        .route(
+            "/v1/public/rpc/:name",
+            post(rpc::public_rpc).layer(DefaultBodyLimit::max(16 * 1024)),
+        )
+        .route(
+            "/v1/internal/rpc/:name",
+            post(rpc::internal_rpc).layer(DefaultBodyLimit::max(256 * 1024)),
+        )
+        .route(
+            "/v1/internal/jobs/:name",
+            post(rpc::internal_job).layer(DefaultBodyLimit::max(16 * 1024)),
+        )
         .route(
             "/v1/uploads",
             post(uploads::upload).layer(DefaultBodyLimit::max(27 * 1024 * 1024)),
