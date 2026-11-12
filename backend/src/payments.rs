@@ -564,77 +564,155 @@ pub async fn verify(
 /// Verify a signed-webhook payment reference directly with Paystack and reconcile its orders.
 pub async fn verify_event(state: &AppState, reference: &str) -> Result<Value, StatusCode> {
     let reference = reference.trim();
-    if reference.len() < 3 || reference.len() > 128
-        || !reference.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    if reference.len() < 3
+        || reference.len() > 128
+        || !reference
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     {
         return Err(StatusCode::BAD_REQUEST);
     }
-    let secret = std::env::var("PAYSTACK_SECRET_KEY").ok()
-        .filter(|v| !v.trim().is_empty()).ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let secret = std::env::var("PAYSTACK_SECRET_KEY")
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
     let escaped = url::form_urlencoded::byte_serialize(reference.as_bytes()).collect::<String>();
-    let response = state.http.get(format!("https://api.paystack.co/transaction/verify/{escaped}"))
-        .header("Authorization", format!("Bearer {secret}")).send().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
+    let response = state
+        .http
+        .get(format!(
+            "https://api.paystack.co/transaction/verify/{escaped}"
+        ))
+        .header("Authorization", format!("Bearer {secret}"))
+        .send()
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
     let http_ok = response.status().is_success();
     let payload: Value = response.json().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
     let data = payload.get("data").cloned().unwrap_or(Value::Null);
-    if !http_ok || payload.get("status").and_then(Value::as_bool) != Some(true)
-        || data.get("status").and_then(Value::as_str) != Some("success") {
+    if !http_ok
+        || payload.get("status").and_then(Value::as_bool) != Some(true)
+        || data.get("status").and_then(Value::as_str) != Some("success")
+    {
         return Err(StatusCode::PAYMENT_REQUIRED);
     }
     if data.get("reference").and_then(Value::as_str) != Some(reference)
-        || !data.get("currency").and_then(Value::as_str).unwrap_or("").eq_ignore_ascii_case("NGN") {
+        || !data
+            .get("currency")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .eq_ignore_ascii_case("NGN")
+    {
         return Err(StatusCode::BAD_REQUEST);
     }
-    let amount = data.get("amount").and_then(Value::as_i64).filter(|v| *v > 0).ok_or(StatusCode::BAD_REQUEST)?;
+    let amount = data
+        .get("amount")
+        .and_then(Value::as_i64)
+        .filter(|v| *v > 0)
+        .ok_or(StatusCode::BAD_REQUEST)?;
     let metadata = data.get("metadata").unwrap_or(&Value::Null);
     let mut ids = BTreeSet::new();
     let mut metadata_ids = BTreeSet::new();
     for key in ["order_id", "orderId"] {
         let value = metadata.get(key);
-        if let Some(id) = value.and_then(Value::as_i64)
-            .or_else(|| value.and_then(Value::as_str).and_then(|v| v.parse::<i64>().ok()))
-            .filter(|id| *id > 0) {
+        if let Some(id) = value
+            .and_then(Value::as_i64)
+            .or_else(|| {
+                value
+                    .and_then(Value::as_str)
+                    .and_then(|v| v.parse::<i64>().ok())
+            })
+            .filter(|id| *id > 0)
+        {
             metadata_ids.insert(id);
         }
     }
     if let Some(raw) = metadata.get("order_ids").and_then(Value::as_str) {
-        for id in raw.split(',').filter_map(|v| v.trim().parse::<i64>().ok()).filter(|id| *id > 0).take(100) {
+        for id in raw
+            .split(',')
+            .filter_map(|v| v.trim().parse::<i64>().ok())
+            .filter(|id| *id > 0)
+            .take(100)
+        {
             metadata_ids.insert(id);
         }
     } else if let Some(values) = metadata.get("order_ids").and_then(Value::as_array) {
-        for id in values.iter().filter_map(|v| v.as_i64().or_else(|| v.as_str().and_then(|s| s.parse::<i64>().ok())))
-            .filter(|id| *id > 0).take(100) {
+        for id in values
+            .iter()
+            .filter_map(|v| {
+                v.as_i64()
+                    .or_else(|| v.as_str().and_then(|s| s.parse::<i64>().ok()))
+            })
+            .filter(|id| *id > 0)
+            .take(100)
+        {
             metadata_ids.insert(id);
         }
     }
     if let Some(id) = order_id_from_reference(reference) {
-        if !metadata_ids.is_empty() && !metadata_ids.contains(&id) { return Err(StatusCode::BAD_REQUEST); }
+        if !metadata_ids.is_empty() && !metadata_ids.contains(&id) {
+            return Err(StatusCode::BAD_REQUEST);
+        }
         ids.insert(id);
     }
     ids.extend(metadata_ids);
-    if ids.is_empty() { return Err(StatusCode::NOT_FOUND); }
+    if ids.is_empty() {
+        return Err(StatusCode::NOT_FOUND);
+    }
     let ids = ids.into_iter().collect::<Vec<_>>();
-    let orders = fetch_orders(state, &ids).await.map_err(|_| StatusCode::BAD_GATEWAY)?;
-    if orders.len() != ids.len() { return Err(StatusCode::NOT_FOUND); }
-    if orders.iter().any(|o| o.terminal() || (!o.paid() && !o.payable())) { return Err(StatusCode::CONFLICT); }
+    let orders = fetch_orders(state, &ids)
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+    if orders.len() != ids.len() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    if orders
+        .iter()
+        .any(|o| o.terminal() || (!o.paid() && !o.payable()))
+    {
+        return Err(StatusCode::CONFLICT);
+    }
     if ids.len() > 1 {
-        let expected = (orders.iter().map(OrderRow::payment_due).sum::<f64>() * 100.0).round() as i64;
-        if (expected - amount).abs() > 100 { return Err(StatusCode::BAD_REQUEST); }
+        let expected =
+            (orders.iter().map(OrderRow::payment_due).sum::<f64>() * 100.0).round() as i64;
+        if (expected - amount).abs() > 100 {
+            return Err(StatusCode::BAD_REQUEST);
+        }
     } else {
         let expected = (orders[0].payment_due() * 100.0).round() as i64;
-        if !orders[0].paid() && (expected - amount).abs() > 100 { return Err(StatusCode::BAD_REQUEST); }
+        if !orders[0].paid() && (expected - amount).abs() > 100 {
+            return Err(StatusCode::BAD_REQUEST);
+        }
     }
-    let channel = data.get("channel").and_then(Value::as_str).unwrap_or("card");
+    let channel = data
+        .get("channel")
+        .and_then(Value::as_str)
+        .unwrap_or("card");
     let mut results = Vec::new();
     for id in &ids {
-        let per_order = if ids.len() > 1 { format!("{reference}#{id}") } else { reference.to_owned() };
-        match mark_order_paid(state, *id, &per_order, if ids.len() > 1 { None } else { Some(amount) }, channel).await {
+        let per_order = if ids.len() > 1 {
+            format!("{reference}#{id}")
+        } else {
+            reference.to_owned()
+        };
+        match mark_order_paid(
+            state,
+            *id,
+            &per_order,
+            if ids.len() > 1 { None } else { Some(amount) },
+            channel,
+        )
+        .await
+        {
             Ok(value) => results.push(json!({"orderId":id,"ok":true,"data":value})),
             Err(_) => results.push(json!({"orderId":id,"ok":false,"error":"update_failed"})),
         }
     }
-    let all_ok = results.iter().all(|row| row.get("ok").and_then(Value::as_bool) == Some(true));
-    Ok(json!({"success":all_ok,"reference":reference,"amount":amount,"currency":"NGN","channel":channel,"orderIds":ids,"results":results}))
+    let all_ok = results
+        .iter()
+        .all(|row| row.get("ok").and_then(Value::as_bool) == Some(true));
+    Ok(
+        json!({"success":all_ok,"reference":reference,"amount":amount,"currency":"NGN","channel":channel,"orderIds":ids,"results":results}),
+    )
 }
 
 #[cfg(test)]

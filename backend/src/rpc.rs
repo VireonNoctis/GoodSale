@@ -322,19 +322,44 @@ pub async fn internal_rpc(
     if !args.is_object() && !args.is_null() {
         return fail(StatusCode::BAD_REQUEST, "RPC args must be an object.");
     }
-    if ["wallet_funding_event", "premium_activation_event", "order_payment_event"].contains(&name.as_str()) {
-        let reference = args.get("reference").and_then(Value::as_str).unwrap_or("").trim();
-        if reference.len() < 8 || reference.len() > 128
-            || !reference.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
-            return fail(StatusCode::BAD_REQUEST, "A valid payment reference is required.");
+    if [
+        "wallet_funding_event",
+        "premium_activation_event",
+        "order_payment_event",
+    ]
+    .contains(&name.as_str())
+    {
+        let reference = args
+            .get("reference")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .trim();
+        if reference.len() < 8
+            || reference.len() > 128
+            || !reference
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+        {
+            return fail(
+                StatusCode::BAD_REQUEST,
+                "A valid payment reference is required.",
+            );
         }
         let result = match name.as_str() {
-            "wallet_funding_event" => crate::wallet_premium::verify_wallet_event(&s, reference).await,
-            "premium_activation_event" => crate::wallet_premium::verify_premium_event(&s, reference).await,
+            "wallet_funding_event" => {
+                crate::wallet_premium::verify_wallet_event(&s, reference).await
+            }
+            "premium_activation_event" => {
+                crate::wallet_premium::verify_premium_event(&s, reference).await
+            }
             _ => crate::payments::verify_event(&s, reference).await,
         };
         return match result {
-            Ok(data) => (StatusCode::OK, Json(json!({ "success": true, "data": data }))).into_response(),
+            Ok(data) => (
+                StatusCode::OK,
+                Json(json!({ "success": true, "data": data })),
+            )
+                .into_response(),
             Err(code) => fail(code, "Provider payment verification failed."),
         };
     }
