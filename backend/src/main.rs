@@ -1,3 +1,4 @@
+mod account;
 mod config;
 mod payments;
 mod rate_limit;
@@ -12,7 +13,7 @@ use axum::{
     http::{header, HeaderMap, HeaderValue, Method, Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::{get, patch, post},
     Json, Router,
 };
 use config::Settings;
@@ -346,6 +347,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .route("/v1/security/inspect-text", post(inspect_text))
         .route("/v1/security/validate-url", post(validate_url))
+        .route("/v1/account/profile", patch(account::update_profile).layer(DefaultBodyLimit::max(64 * 1024)))
+        .route("/v1/account/delete", post(account::delete_account))
+        .route(
+            "/v1/account/settings",
+            get(account::get_settings).patch(account::patch_settings).layer(DefaultBodyLimit::max(32 * 1024)),
+        )
         .route(
             "/v1/payments/verify",
             post(payments::verify).layer(DefaultBodyLimit::max(32 * 1024)),
