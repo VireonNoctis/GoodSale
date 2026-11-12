@@ -87,3 +87,8 @@ Port one domain at a time and preserve the exact JSON/status contracts used by t
 7. Admin, verification, ads, premium subscriptions and referrals.
 
 Each cutover needs Rust unit/integration tests, Supabase RPC permission checks, idempotency tests for money-moving operations, and frontend contract verification before the matching TypeScript route can be removed.
+
+
+## CI checks
+
+The fork's Rust workflow formats Rust sources on pushes to `premium-marketplace-rework`, commits formatter-only changes, then runs Clippy with warnings denied, unit tests and a release build. Pull-request runs check formatting without modifying the branch. The repository's main CI separately runs Next.js lint, typecheck, tests and build.
