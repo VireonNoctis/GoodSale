@@ -19,6 +19,23 @@ export async function POST() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const rustBackend = process.env.RUST_BACKEND_URL?.trim().replace(/\/+$/, '');
+    if (rustBackend) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+      const upstream = await fetch(`${rustBackend}/v1/account/delete`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: 'no-store',
+      });
+      const payload = await upstream.json().catch(() => ({ success: false, error: 'Account service returned an invalid response' }));
+      if (!upstream.ok) return NextResponse.json(payload, { status: upstream.status });
+      await supabase.auth.signOut();
+      return NextResponse.json({ success: true });
+    }
+
     await admin.from('profiles').delete().eq('auth_id', user.id);
     const { error } = await admin.auth.admin.deleteUser(user.id);
     if (error) {
