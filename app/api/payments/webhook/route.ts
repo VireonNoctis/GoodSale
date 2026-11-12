@@ -4,8 +4,6 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { logger, publicErrorMessage } from '@/lib/logger';
 import { reconcilePaystackPayment } from '@/lib/data/payments';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { creditVerifiedWalletFunding } from '@/lib/wallet/server';
-import { activateVerifiedPremiumPayment } from '@/lib/premium/server';
 
 /**
  * Paystack webhook receiver.
@@ -44,14 +42,14 @@ export async function POST(req: NextRequest) {
       // Premium memberships are activated only from this signed event or a
       // server-to-server verify call — never from the browser callback.
       if (reference.startsWith('GSP_')) {
-        const premium = await activateVerifiedPremiumPayment(reference, event.data);
+        const premium = await callRustInternalRpc('premium_activation_event', { reference });
         return NextResponse.json({ success: premium.success, received: true, premium });
       }
 
       // Wallet funding is credited only after the signed event, amount and
       // intent identity are checked against the funding record.
       if (walletFundingId || reference.startsWith('GSW_')) {
-        const funding = await creditVerifiedWalletFunding(reference, event.data);
+        const funding = await callRustInternalRpc('wallet_funding_event', { reference });
         return NextResponse.json({ success: funding.success, received: true, funding });
       }
 
